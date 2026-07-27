@@ -1,13 +1,20 @@
 <?php
 
-declare(strict_types=1);
 
+require_once __DIR__ . '/../../Models/AlunoModel.php';
+require_once __DIR__ . '/../../Core/Model.php';
+require_once __DIR__ . '/../../Core/Database.php';
+
+$alunoModel = new AlunoModel();
+
+$alunos = $alunoModel->listarTodos();
 ?>
 
 <!DOCTYPE html>
 <html lang="pt-BR">
 
 <head>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alunos - GymManager</title>
@@ -28,6 +35,11 @@ declare(strict_types=1);
         <li>Editar alunos</li>
         <li>Excluir alunos</li>
         <li>Visualizar todos os alunos</li>
+        <pre>
+<?php
+print_r($alunos);
+?>
+</pre>
     </ul>
 
 </body>

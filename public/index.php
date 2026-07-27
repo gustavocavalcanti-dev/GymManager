@@ -2,25 +2,30 @@
 
 declare(strict_types=1);
 
-use App\Core\App;
-use App\Core\Router;
-
 spl_autoload_register(function (string $class): void {
-    $prefix = 'App\\';
     $baseDirectory = dirname(__DIR__) . '/app/';
+    $paths = [
+        $baseDirectory . 'Core/',
+        $baseDirectory . 'Controllers/',
+        $baseDirectory . 'Models/',
+        $baseDirectory . 'Config/',
+        $baseDirectory . 'Helpers/',
+        $baseDirectory . 'Middleware/',
+    ];
 
-    if (!str_starts_with($class, $prefix)) {
-        return;
+    $file = $class . '.php';
+
+    foreach ($paths as $path) {
+        $candidate = $path . $file;
+        if (file_exists($candidate)) {
+            require_once $candidate;
+            return;
+        }
     }
 
-    $relativeClass = substr($class, strlen($prefix));
-
-    $file = $baseDirectory
-        . str_replace('\\', '/', $relativeClass)
-        . '.php';
-
-    if (file_exists($file)) {
-        require $file;
+    $candidate = $baseDirectory . str_replace('\\', '/', $class) . '.php';
+    if (file_exists($candidate)) {
+        require_once $candidate;
     }
 });
 

@@ -2,16 +2,16 @@
 
 declare(strict_types=1);
 
-use App\Controllers\DashboardController;
-use App\Controllers\AlunoController;
-use App\Controllers\ProfessorController;
-use App\Controllers\PlanoController;
-use App\Controllers\TreinoController;
-use App\Controllers\PagamentoController;
-use App\Controllers\MatriculaController;
-use App\Controllers\UsuarioController;
-use App\Controllers\ConfiguracaoController;
-use App\Controllers\LoginController;
+
+
+
+
+
+
+
+
+
+
 
 // Dashboard
 $router->get('/', DashboardController::class, 'index');
