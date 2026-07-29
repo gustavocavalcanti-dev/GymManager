@@ -28,5 +28,14 @@ abstract class Model
         $stmp->execute([$id]);
         return $stmp->fetch();
     }
+
+    public function cadastrar(array $dados){
+        $colunas = array_keys($dados);
+        $campos = implode(', ', $colunas);
+        $placeholders = implode(', ', array_fill(0, count($colunas), '?'));
+        $sql = "INSERT INTO {$this->table} ($campos) VALUES ($placeholders)";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute(array_values($dados));
+    }
     
 }
