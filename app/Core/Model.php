@@ -37,5 +37,18 @@ abstract class Model
         $stmt = $this->db->prepare($sql);
         return $stmt->execute(array_values($dados));
     }
-    
+    public function editar($id, array $dados){
+     $campos = [];
+    $colunas = array_keys($dados);
+
+    foreach ($colunas as $coluna) {
+        $campos[] = "$coluna = ?";
+    }
+    $set = implode(', ', $campos);
+    $sql = "UPDATE {$this->table} SET $set WHERE id = ?";
+    $stmt = $this->db->prepare($sql);
+    $valores = array_values($dados);
+    $valores[] = $id;
+    return $stmt->execute($valores);;
+    }
 }
