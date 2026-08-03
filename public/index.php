@@ -29,6 +29,8 @@ spl_autoload_register(function (string $class): void {
     }
 });
 
+define('BASE_PATH', str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'])));
+
 $router = new Router();
 
 $routesFile = dirname(__DIR__) . '/app/Routes/web.php';

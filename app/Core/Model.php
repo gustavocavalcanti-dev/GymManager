@@ -24,9 +24,9 @@ abstract class Model
 
     public function buscaPorId($id) {
         $sql = "SELECT * FROM {$this->table} WHERE id = ?";
-        $stmp = $this->db->query($sql);
-        $stmp->execute([$id]);
-        return $stmp->fetch();
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([$id]);
+        return $stmt->fetch();
     }
 
     public function cadastrar(array $dados){
@@ -37,18 +37,28 @@ abstract class Model
         $stmt = $this->db->prepare($sql);
         return $stmt->execute(array_values($dados));
     }
-    public function editar($id, array $dados){
-     $campos = [];
-    $colunas = array_keys($dados);
+    public function editar($id, array $dados)
+    {
+        $campos = [];
+        $colunas = array_keys($dados);
 
-    foreach ($colunas as $coluna) {
-        $campos[] = "$coluna = ?";
+        foreach ($colunas as $coluna) {
+            $campos[] = "$coluna = ?";
+        }
+
+        $set = implode(', ', $campos);
+        $sql = "UPDATE {$this->table} SET $set WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
+        $valores = array_values($dados);
+        $valores[] = $id;
+
+        return $stmt->execute($valores);
     }
-    $set = implode(', ', $campos);
-    $sql = "UPDATE {$this->table} SET $set WHERE id = ?";
-    $stmt = $this->db->prepare($sql);
-    $valores = array_values($dados);
-    $valores[] = $id;
-    return $stmt->execute($valores);;
+
+    public function excluir($id)
+    {
+        $sql = "DELETE FROM {$this->table} WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([$id]);
     }
 }

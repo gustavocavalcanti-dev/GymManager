@@ -21,6 +21,11 @@ $router->get('/login', LoginController::class, 'index');
 
 // Alunos
 $router->get('/alunos', AlunoController::class, 'index');
+$router->get('/alunos/create', AlunoController::class, 'create');
+$router->post('/alunos/store', AlunoController::class, 'store');
+$router->get('/alunos/edit', AlunoController::class, 'edit');
+$router->post('/alunos/update', AlunoController::class, 'update');
+$router->get('/alunos/delete', AlunoController::class, 'delete');
 
 // Professores
 $router->get('/professores', ProfessorController::class, 'index');

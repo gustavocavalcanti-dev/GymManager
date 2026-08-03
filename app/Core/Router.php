@@ -19,28 +19,39 @@ class Router
         ];
     }
 
+    public function post(
+        string $uri,
+        string $controller,
+        string $method
+    ): void {
+        $this->routes['POST'][$uri] = [
+            'controller' => $controller,
+            'method' => $method
+        ];
+    }
+
     public function dispatch(): void
     {
         $requestMethod = $_SERVER['REQUEST_METHOD'];
 
         $requestUri = parse_url(
-            $_SERVER['REQUEST_URI'],
+            $_SERVER['REQUEST_URI'], 
             PHP_URL_PATH
         );
 
-        $basePath = '/GymManager/public';
+        $basePath = defined('BASE_PATH')
+            ? BASE_PATH
+            : str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
 
-        if (str_starts_with($requestUri, $basePath)) {
+        if ($basePath === '/') {
+            $basePath = '';
+        }
+
+        if ($basePath !== '' && str_starts_with($requestUri, $basePath)) {
             $requestUri = substr(
                 $requestUri,
                 strlen($basePath)
             );
-        }
-
-        $requestUri = '/' . trim($requestUri, '/');
-
-        if ($requestUri === '//') {
-            $requestUri = '/';
         }
 
         $route = $this->routes[$requestMethod][$requestUri] ?? null;
