@@ -2,7 +2,7 @@
 
 return [
     'host' => 'localhost',
-    'dbname' => 'gymmanager',
+    'dbname' => 'gym_manager',
     'user' => 'root',
     'password' => 'masterkey',
     'charset' => 'utf8mb4'

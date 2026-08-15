@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 spl_autoload_register(function (string $class): void {
     $baseDirectory = dirname(__DIR__) . '/app/';
     $paths = [
@@ -29,7 +33,8 @@ spl_autoload_register(function (string $class): void {
     }
 });
 
-define('BASE_PATH', str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'])));
+$scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+define('BASE_PATH', ($scriptDir === '/' || $scriptDir === '.') ? '' : rtrim($scriptDir, '/'));
 
 $router = new Router();
 
