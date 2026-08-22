@@ -9,9 +9,7 @@ abstract class Controller
         $viewPath = dirname(__DIR__) . '/Views/' . $view . '.php';
 
         if (!file_exists($viewPath)) {
-            throw new \RuntimeException(
-                "A view {$view} não foi encontrada."
-            );
+            throw new \RuntimeException("A view {$view} não foi encontrada.");
         }
 
         if (!isset($data['sucesso'])) {
@@ -23,6 +21,8 @@ abstract class Controller
         if (!isset($data['erros'])) {
             $data['erros'] = $this->getFlash('erros') ?: [];
         }
+
+        $data['usuarioLogado'] = $this->usuarioLogado();
 
         extract($data);
 
@@ -56,5 +56,25 @@ abstract class Controller
         $url = $basePath . '/' . ltrim($caminho, '/');
         header('Location: ' . $url);
         exit;
+    }
+
+    protected function usuarioLogado(): ?array
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        return $_SESSION['usuario'] ?? null;
+    }
+
+    protected function temPermissao(string $perfil): bool
+    {
+        $usuario = $this->usuarioLogado();
+        if ($usuario === null) {
+            return false;
+        }
+        if ($usuario['perfil'] === 'admin') {
+            return true;
+        }
+        return $usuario['perfil'] === $perfil;
     }
 }

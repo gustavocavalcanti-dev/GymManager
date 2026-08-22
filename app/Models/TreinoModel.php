@@ -1,41 +1,27 @@
 <?php
 
-namespace App\Models;
+declare(strict_types=1);
 
-use App\Core\Model;
-
-class Treino extends Model
+class TreinoModel extends Model
 {
     protected $table = 'treinos';
 
-    public function all()
+    public function listarComDetalhes(): array
     {
-        return $this->db->query("SELECT * FROM {$this->table}");
+        $sql = "SELECT t.*, a.nome AS aluno_nome, p.nome AS professor_nome
+                FROM {$this->table} t
+                INNER JOIN alunos a ON t.aluno_id = a.id
+                INNER JOIN professores p ON t.professor_id = p.id
+                ORDER BY t.criado_em DESC";
+        $stmt = $this->db->query($sql);
+        return $stmt->fetchAll();
     }
 
-    public function find($id)
+    public function contarTotal(): int
     {
-        return $this->db->query("SELECT * FROM {$this->table} WHERE id = ?", [$id]);
-    }
-
-    public function create($data)
-    {
-        return $this->db->query(
-            "INSERT INTO {$this->table} (descricao, usuario_id) VALUES (?, ?)",
-            [$data['descricao'], $data['usuario_id']]
-        );
-    }
-
-    public function update($id, $data)
-    {
-        return $this->db->query(
-            "UPDATE {$this->table} SET descricao = ?, usuario_id = ? WHERE id = ?",
-            [$data['descricao'], $data['usuario_id'], $id]
-        );
-    }
-
-    public function delete($id)
-    {
-        return $this->db->query("DELETE FROM {$this->table} WHERE id = ?", [$id]);
+        $sql = "SELECT COUNT(*) as total FROM {$this->table}";
+        $stmt = $this->db->query($sql);
+        $resultado = $stmt->fetch();
+        return (int)($resultado['total'] ?? 0);
     }
 }

@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
+namespace App\Core;
 
 require_once __DIR__ . '/Database.php';
 
 abstract class Model
 {
-
     protected $db;
     protected $table;
- public function __construct()
-    {
-        $this->db = Database::conectar();
-    }
 
+    public function __construct()
+    {
+        $this->db = \Database::conectar();
+    }
 
     public function listarTodos(): array{
         $sql = "SELECT * FROM {$this->table} ";

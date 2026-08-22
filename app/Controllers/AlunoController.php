@@ -1,6 +1,7 @@
 <?php
-
 declare(strict_types=1);
+
+
 
 class AlunoController extends Controller
 {
@@ -14,7 +15,6 @@ class AlunoController extends Controller
     public function index(): void
     {
         $alunos = $this->alunoModel->listarTodos();
-
         $this->view('Alunos/index', [
             'alunos' => $alunos
         ]);
@@ -73,7 +73,7 @@ class AlunoController extends Controller
 
     public function edit(): void
     {
-        $id = (int)($_GET['id'] ?? 0);
+        $id = (int) ($_GET['id'] ?? 0);
 
         if ($id <= 0) {
             $this->setFlash('erro', 'Código do aluno inválido.');
@@ -97,7 +97,7 @@ class AlunoController extends Controller
 
     public function update(): void
     {
-        $id = (int)($_POST['id'] ?? $_GET['id'] ?? 0);
+        $id = (int) ($_POST['id'] ?? $_GET['id'] ?? 0);
 
         if ($id <= 0) {
             $this->setFlash('erro', 'Código do aluno inválido para atualização.');
@@ -151,7 +151,7 @@ class AlunoController extends Controller
 
     public function delete(): void
     {
-        $id = (int)($_POST['id'] ?? $_GET['id'] ?? 0);
+        $id = (int) ($_POST['id'] ?? $_GET['id'] ?? 0);
 
         if ($id <= 0) {
             $this->setFlash('erro', 'Código de aluno inválido para exclusão.');

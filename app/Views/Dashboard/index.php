@@ -1,52 +1,50 @@
 <?php
-
-declare(strict_types=1);
-
 $basePath = defined('BASE_PATH') ? BASE_PATH : '';
+include dirname(__DIR__) . '/layouts/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - GymManager</title>
-    <link rel="stylesheet" href="<?= $basePath ?>/css/style.css">
-</head>
-<body>
-    <div class="container">
-        <header class="header-nav">
-            <div class="app-title">GymManager</div>
-            <nav class="nav-links">
-                <a href="<?= $basePath ?>/" style="color: var(--primary); font-weight: 700;">Dashboard</a>
-                <a href="<?= $basePath ?>/alunos">Alunos</a>
-                <a href="<?= $basePath ?>/professores">Professores</a>
-                <a href="<?= $basePath ?>/planos">Planos</a>
-                <a href="<?= $basePath ?>/treinos">Treinos</a>
-            </nav>
-        </header>
 
-        <main class="card">
-            <div class="card-header">
-                <div>
-                    <h1 class="page-title">Painel Principal</h1>
-                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 4px;">
-                        Bem-vindo ao sistema de gestão de academia GymManager.
-                    </p>
-                </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 12px;">
-                <div style="border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; background: #fafafa;">
-                    <h3 style="font-size: 1.1rem; margin-bottom: 8px; color: var(--primary);">Módulo de Alunos</h3>
-                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 16px;">
-                        Cadastro, edição, consulta e exclusão de alunos.
-                    </p>
-                    <a href="<?= $basePath ?>/alunos" class="btn btn-primary btn-sm">
-                        Gerenciar Alunos &rarr;
-                    </a>
-                </div>
-            </div>
-        </main>
+<div class="card">
+    <div class="card-header">
+        <div>
+            <h1 class="page-title">Painel de Controle</h1>
+            <p class="subtitle">Visão geral do sistema de gestão da academia</p>
+        </div>
     </div>
-</body>
-</html>
+
+    <div class="dashboard-grid">
+        <div class="stat-card">
+            <h3>Alunos</h3>
+            <p class="stat-number"><?= $totalAlunos ?></p>
+            <p class="stat-desc">Cadastros totais</p>
+        </div>
+        <div class="stat-card">
+            <h3>Professores</h3>
+            <p class="stat-number"><?= $totalProfessores ?></p>
+            <p class="stat-desc">Profissionais cadastrados</p>
+        </div>
+        <div class="stat-card">
+            <h3>Matrículas Ativas</h3>
+            <p class="stat-number"><?= $matriculasAtivas ?> / <?= $totalMatriculas ?></p>
+            <p class="stat-desc">Matrículas ativas atualmente</p>
+        </div>
+        <div class="stat-card">
+            <h3>Treinos</h3>
+            <p class="stat-number"><?= $totalTreinos ?></p>
+            <p class="stat-desc">Treinos prescritos</p>
+        </div>
+        <div class="stat-card">
+            <h3>Planos</h3>
+            <p class="stat-number"><?= $totalPlanos ?></p>
+            <p class="stat-desc">Tipos de planos</p>
+        </div>
+        <div class="stat-card">
+            <h3>Faturamento</h3>
+            <p class="stat-number">R$ <?= number_format($totalPagamentos, 2, ',', '.') ?></p>
+            <p class="stat-desc">Total pago no sistema</p>
+        </div>
+    </div>
+</div>
+
+<?php
+include dirname(__DIR__) . '/layouts/footer.php';
+?>
