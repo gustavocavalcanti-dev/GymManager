@@ -4,6 +4,7 @@
 # Documentação
 README.md
 .env.example
+subir.md
 
 # Dependências (se usar Composer no futuro)
 /vendor/
