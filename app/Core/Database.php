@@ -9,11 +9,21 @@ class Database
     public static function conectar(): \PDO
     {
         if (self::$conexao === null) {
+            // Lê configurações do arquivo Config/Database.php
+            $config = require dirname(__DIR__) . '/Config/Database.php';
+
+            $host     = $config['host']     ?? 'localhost';
+            $port     = $config['port']     ?? '3306';
+            $dbname   = $config['dbname']   ?? 'gym_manager';
+            $user     = $config['user']     ?? 'root';
+            $password = $config['password'] ?? '';
+            $charset  = $config['charset']  ?? 'utf8mb4';
+
             try {
                 self::$conexao = new \PDO(
-                    'mysql:host=localhost;port=3306;dbname=gym_manager;charset=utf8mb4',
-                    'root',
-                    'masterkey'
+                    "mysql:host={$host};port={$port};dbname={$dbname};charset={$charset}",
+                    $user,
+                    $password
                 );
 
                 self::$conexao->setAttribute(
@@ -26,7 +36,9 @@ class Database
                     \PDO::FETCH_ASSOC
                 );
             } catch (\PDOException $erro) {
-                die('Erro na conexão: ' . $erro->getMessage());
+                // Em produção, nunca exibir detalhes do erro ao usuário
+                error_log('Erro na conexão com banco de dados: ' . $erro->getMessage());
+                die('Erro interno no servidor. Contate o administrador.');
             }
         }
 
