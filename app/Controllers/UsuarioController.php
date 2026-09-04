@@ -298,7 +298,7 @@ class UsuarioController extends Controller
 
         if (empty($dados['nome'])) {
             $erros[] = 'O campo Nome é obrigatório.';
-        } elseif (mb_strlen($dados['nome']) < 3) {
+        } elseif (strlen($dados['nome']) < 3) {
             $erros[] = 'O Nome deve ter pelo menos 3 caracteres.';
         }
 
@@ -317,7 +317,7 @@ class UsuarioController extends Controller
                 $erros[] = 'A senha atual está incorreta.';
             }
 
-            if (mb_strlen($novaSenha) < 6) {
+            if (strlen($novaSenha) < 6) {
                 $erros[] = 'A nova senha deve ter pelo menos 6 caracteres.';
             }
 
@@ -366,7 +366,7 @@ class UsuarioController extends Controller
 
         if (empty($dados['nome'])) {
             $erros[] = 'O campo Nome é obrigatório.';
-        } elseif (mb_strlen($dados['nome']) < 3) {
+        } elseif (strlen($dados['nome']) < 3) {
             $erros[] = 'O Nome deve ter pelo menos 3 caracteres.';
         }
 
@@ -378,7 +378,7 @@ class UsuarioController extends Controller
 
         if (empty($dados['senha'])) {
             $erros[] = 'O campo Senha é obrigatório.';
-        } elseif (mb_strlen($dados['senha']) < 6) {
+        } elseif (strlen($dados['senha']) < 6) {
             $erros[] = 'A senha deve ter pelo menos 6 caracteres.';
         }
 
@@ -395,7 +395,7 @@ class UsuarioController extends Controller
 
         if (empty($dados['nome'])) {
             $erros[] = 'O campo Nome é obrigatório.';
-        } elseif (mb_strlen($dados['nome']) < 3) {
+        } elseif (strlen($dados['nome']) < 3) {
             $erros[] = 'O Nome deve ter pelo menos 3 caracteres.';
         }
 
@@ -406,7 +406,7 @@ class UsuarioController extends Controller
         }
 
         if (!empty($senha)) {
-            if (mb_strlen($senha) < 6) {
+            if (strlen($senha) < 6) {
                 $erros[] = 'A senha deve ter pelo menos 6 caracteres.';
             }
             if ($senha !== $confirmarSenha) {

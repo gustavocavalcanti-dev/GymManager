@@ -1,5 +1,3 @@
-USE `gym_manager`;
-
 ALTER TABLE `usuarios` ADD COLUMN IF NOT EXISTS `perfil` ENUM('admin','professor','recepcionista') NOT NULL DEFAULT 'recepcionista' AFTER `senha`;
 
 ALTER TABLE `usuarios` ADD COLUMN IF NOT EXISTS `ativo` TINYINT(1) NOT NULL DEFAULT 1 AFTER `perfil`;

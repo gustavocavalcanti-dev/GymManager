@@ -1,0 +1,38 @@
+GYMMANAGER - PACOTE FINAL REVISADO PARA INFINITYFREE
+Build: 2026.09.04-final-2
+
+ENVIE O CONTEUDO desta pasta diretamente para htdocs.
+Nao envie a pasta externa como subpasta.
+
+Estrutura esperada:
+htdocs/
+  index.php
+  .htaccess
+  diagnostico.php
+  css/
+  app/
+  database/
+  storage/
+
+CORRECOES APLICADAS:
+- Caminhos do index.php ajustados para executar na raiz htdocs.
+- Rewrite do Apache preparado para /login, /alunos, /dashboard etc.
+- TreinoModel corrigido para carregar App\Core\Model.
+- Removida dependencia de mb_strlen/mbstring nas validacoes.
+- Database.php nao usa mais getenv para sobrescrever a senha.
+- Database.php tenta localizar automaticamente o banco da conta se o nome configurado estiver incorreto e houver um unico candidato seguro.
+- Erros de conexao sao registrados em storage/logs/database.log quando a hospedagem permitir.
+- Mensagens flash de sucesso/erro corrigidas nas telas.
+- Migration sem USE gym_manager fixo.
+- app/, database/ e storage/ bloqueados para acesso HTTP direto.
+- diagnostico.php incluido para testar PHP, PDO, credenciais, banco, tabelas e usuario admin sem exibir a senha.
+
+TESTE:
+1. Acesse /diagnostico.php
+2. Todos os itens principais devem aparecer OK.
+3. Depois acesse /login
+4. Login inicial: admin@gymmanager.com / admin123
+5. Ao finalizar, APAGUE diagnostico.php, teste.php e teste_banco.php.
+
+SEGURANCA:
+A senha do banco ja apareceu em capturas durante a configuracao. Depois que o deploy estiver funcionando, troque a senha MySQL no painel e atualize app/Config/Database.php.

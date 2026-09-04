@@ -187,9 +187,9 @@ class AlunoController extends Controller
 
         if (empty($dados['nome'])) {
             $erros[] = 'O campo Nome é obrigatório.';
-        } elseif (mb_strlen($dados['nome']) < 3) {
+        } elseif (strlen($dados['nome']) < 3) {
             $erros[] = 'O Nome deve conter pelo menos 3 caracteres.';
-        } elseif (mb_strlen($dados['nome']) > 100) {
+        } elseif (strlen($dados['nome']) > 100) {
             $erros[] = 'O Nome não pode ultrapassar 100 caracteres.';
         }
 
@@ -197,13 +197,13 @@ class AlunoController extends Controller
             $erros[] = 'O campo E-mail é obrigatório.';
         } elseif (!filter_var($dados['email'], FILTER_VALIDATE_EMAIL)) {
             $erros[] = 'Informe um endereço de e-mail válido.';
-        } elseif (mb_strlen($dados['email']) > 150) {
+        } elseif (strlen($dados['email']) > 150) {
             $erros[] = 'O E-mail não pode ultrapassar 150 caracteres.';
         }
 
         if (!empty($dados['telefone'])) {
             $apenasNumeros = preg_replace('/\D/', '', $dados['telefone']);
-            if (mb_strlen($apenasNumeros) < 8 || mb_strlen($apenasNumeros) > 15) {
+            if (strlen($apenasNumeros) < 8 || strlen($apenasNumeros) > 15) {
                 $erros[] = 'O Telefone deve conter entre 8 e 15 dígitos numéricos.';
             }
         }

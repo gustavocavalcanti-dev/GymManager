@@ -45,15 +45,13 @@ $currentUri = '/' . trim($currentUri, '/');
             </div>
         </aside>
         <main class="main-content">
-            <?php if (!empty($_SESSION['flash']['sucesso'])): ?>
+            <?php if (!empty($sucesso)): ?>
                 <div class="alert alert-success">
-                    <?= htmlspecialchars($_SESSION['flash']['sucesso']) ?>
-                    <?php unset($_SESSION['flash']['sucesso']); ?>
+                    <?= htmlspecialchars((string) $sucesso) ?>
                 </div>
             <?php endif; ?>
-            <?php if (!empty($_SESSION['flash']['erro'])): ?>
+            <?php if (!empty($erro)): ?>
                 <div class="alert alert-danger">
-                    <?= htmlspecialchars($_SESSION['flash']['erro']) ?>
-                    <?php unset($_SESSION['flash']['erro']); ?>
+                    <?= htmlspecialchars((string) $erro) ?>
                 </div>
             <?php endif; ?>

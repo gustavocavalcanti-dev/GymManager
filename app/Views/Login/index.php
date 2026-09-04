@@ -34,17 +34,15 @@ $basePath = defined('BASE_PATH') ? BASE_PATH : '';
                 <h2>Bem-vindo de volta</h2>
                 <p class="login-subtitle">Entre com suas credenciais para acessar o painel.</p>
 
-                <?php if (!empty($_SESSION['flash']['erro'])): ?>
+                <?php if (!empty($erro)): ?>
                     <div class="alert alert-danger">
-                        <?= htmlspecialchars($_SESSION['flash']['erro']) ?>
-                        <?php unset($_SESSION['flash']['erro']); ?>
+                        <?= htmlspecialchars((string) $erro) ?>
                     </div>
                 <?php endif; ?>
 
-                <?php if (!empty($_SESSION['flash']['sucesso'])): ?>
+                <?php if (!empty($sucesso)): ?>
                     <div class="alert alert-success">
-                        <?= htmlspecialchars($_SESSION['flash']['sucesso']) ?>
-                        <?php unset($_SESSION['flash']['sucesso']); ?>
+                        <?= htmlspecialchars((string) $sucesso) ?>
                     </div>
                 <?php endif; ?>
 

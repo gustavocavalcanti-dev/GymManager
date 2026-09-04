@@ -1,5 +1,13 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteRule ^$ public/ [L]
-    RewriteRule ^((?!public/).*)$ public/$1 [L]
+
+    # Bloqueia acesso HTTP direto a arquivos internos do sistema.
+    RewriteRule ^(?:app|database|storage)(?:/|$) - [F,L,NC]
+
+    # Arquivos e pastas publicos existentes sao servidos normalmente.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Todas as demais URLs (/login, /alunos, etc.) passam pelo front controller.
+    RewriteRule ^ index.php [L,QSA]
 </IfModule>
