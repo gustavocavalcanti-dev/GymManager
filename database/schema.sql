@@ -70,4 +70,9 @@ CREATE TABLE IF NOT EXISTS `treinos` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 INSERT INTO `usuarios` (`nome`, `email`, `senha`, `perfil`, `ativo`) VALUES
-('Administrador', 'admin@gymmanager.com', '$2y$10$z3x68wzC46IKp0r2TvEki.FcN/G0eF1xfNrSvtCF1J0SQ1YaU3yvS', 'admin', 1);
+('Administrador', 'admin@gymmanager.com', '$2y$10$QudLFr.YgKrVZayYbdf8kO/Npp.Y.mk/v5N4ZEnWhijIQNlncgeoe', 'admin', 1)
+ON DUPLICATE KEY UPDATE
+    `nome` = VALUES(`nome`),
+    `senha` = VALUES(`senha`),
+    `perfil` = VALUES(`perfil`),
+    `ativo` = VALUES(`ativo`);
