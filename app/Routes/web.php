@@ -69,4 +69,7 @@ $router->post('/usuarios/delete', UsuarioController::class, 'delete', [AuthMiddl
 $router->get('/usuarios/toggle', UsuarioController::class, 'toggleStatus', [AuthMiddleware::class, AdminMiddleware::class]);
 
 $router->get('/configuracoes', ConfiguracaoController::class, 'index', [AuthMiddleware::class, AdminMiddleware::class]);
+$router->post('/configuracoes/salvar', ConfiguracaoController::class, 'salvar', [AuthMiddleware::class, AdminMiddleware::class]);
 $router->get('/relatorios', RelatorioController::class, 'index', [AuthMiddleware::class, AdminMiddleware::class]);
+$router->get('/relatorios/exportar-excel', RelatorioController::class, 'exportarExcel', [AuthMiddleware::class, AdminMiddleware::class]);
+$router->get('/relatorios/imprimir', RelatorioController::class, 'imprimir', [AuthMiddleware::class, AdminMiddleware::class]);

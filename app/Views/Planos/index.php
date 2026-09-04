@@ -1,72 +1,77 @@
 <?php
 $basePath = defined('BASE_PATH') ? BASE_PATH : '';
 include dirname(__DIR__) . '/layouts/header.php';
+
+$featureDefaults = [
+    'mensal' => ['Musculação e cardio', 'Área de pesos livres'],
+    'trimestral' => ['Musculação e cardio', 'Área de pesos livres', 'Aulas coletivas'],
+    'anual' => ['Acesso completo à academia', 'Aulas coletivas ilimitadas', 'Melhor custo-benefício'],
+    'premium' => ['Acesso total à academia', 'Aulas coletivas ilimitadas', 'Acompanhamento personalizado', 'Benefícios exclusivos'],
+    'estudante' => ['Acesso à musculação e cardio', 'Condição especial para estudantes'],
+];
 ?>
-
-<div class="card">
-    <div class="card-header">
-        <div>
-            <h1 class="page-title">Planos</h1>
-            <p class="subtitle">Configure os planos oferecidos pela academia.</p>
-        </div>
-        <?php if ($usuarioLogado && in_array($usuarioLogado['perfil'], ['admin', 'recepcionista'], true)): ?>
-            <a href="<?= $basePath ?>/planos/create" class="btn btn-primary">+ Novo Plano</a>
-        <?php endif; ?>
+<div class="page-head">
+    <div>
+        <h1 class="page-title">Planos</h1>
+        <p class="subtitle">Configure os planos oferecidos pela academia.</p>
     </div>
-
-    <?php if (empty($planos)): ?>
-        <div class="empty-state">
-            <p>Nenhum plano cadastrado.</p>
-        </div>
-    <?php else: ?>
-        <div class="plans-grid">
-            <?php foreach ($planos as $plano): ?>
-                <?php 
-                $isPopular = stripos($plano['nome'], 'Premium') !== false;
-                ?>
-                <div class="plan-card <?= $isPopular ? 'popular' : '' ?>">
-                    <?php if ($isPopular): ?>
-                        <div class="plan-popular-badge">POPULAR</div>
-                    <?php endif; ?>
-                    
-                    <div class="plan-header">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <h3><?= htmlspecialchars($plano['nome']) ?></h3>
-                            <span class="badge badge-success">Ativo</span>
-                        </div>
-                        <p class="plan-price">
-                            R$ <?= number_format((float)$plano['valor'], 2, ',', '.') ?> 
-                            <span>/ <?= $plano['duracao_meses'] ?> <?= $plano['duracao_meses'] == 1 ? 'mês' : 'meses' ?></span>
-                        </p>
-                    </div>
-
-                    <ul class="plan-features">
-                        <li>Acesso livre à musculação</li>
-                        <li>Área de cardio inclusa</li>
-                        <?php if ($plano['duracao_meses'] >= 3): ?>
-                            <li>Avaliação física inclusa</li>
-                        <?php endif; ?>
-                        <?php if ($isPopular): ?>
-                            <li>Aulas coletivas limitadas</li>
-                            <li>Personal trainer 1x/semana</li>
-                        <?php endif; ?>
-                    </ul>
-
-                    <?php if ($usuarioLogado && in_array($usuarioLogado['perfil'], ['admin', 'recepcionista'], true)): ?>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color);">
-                            <a href="<?= $basePath ?>/planos/edit?id=<?= $plano['id'] ?>" class="btn btn-secondary btn-sm">Editar</a>
-                            <form action="<?= $basePath ?>/planos/delete" method="post" style="display:inline;" onsubmit="return confirm('Tem certeza que deseja excluir este plano?');">
-                                <input type="hidden" name="id" value="<?= $plano['id'] ?>">
-                                <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
-                            </form>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            <?php endforeach; ?>
+    <?php if ($usuarioLogado && in_array($usuarioLogado['perfil'], ['admin', 'recepcionista'], true)): ?>
+        <div class="page-actions">
+            <a href="<?= $basePath ?>/planos/create" class="btn btn-primary"><?= UI::icon('plus', 18) ?> Novo Plano</a>
         </div>
     <?php endif; ?>
 </div>
 
-<?php
-include dirname(__DIR__) . '/layouts/footer.php';
-?>
+<?php if (!$planos): ?>
+    <div class="panel empty-state">Nenhum plano cadastrado.</div>
+<?php else: ?>
+    <div class="plans-grid">
+        <?php foreach ($planos as $plano):
+            $nome = (string)$plano['nome'];
+            $key = strtolower(trim($nome));
+            $isPopular = str_contains($key, 'premium');
+            $status = strtolower((string)($plano['status'] ?? 'ativo'));
+            $descricao = trim((string)($plano['descricao'] ?? ''));
+
+            // Se a descrição já estiver em linhas/itens, usa esses itens. Caso contrário,
+            // mantém a descrição como texto e usa benefícios coerentes com o protótipo.
+            $parts = preg_split('/[\r\n;]+/', $descricao) ?: [];
+            $parts = array_values(array_filter(array_map('trim', $parts)));
+            $features = count($parts) > 1 ? $parts : ($featureDefaults[$key] ?? ['Acesso à academia', 'Benefícios conforme o plano']);
+        ?>
+            <article class="plan-card <?= $isPopular ? 'popular' : '' ?>">
+                <?php if ($isPopular): ?><span class="plan-popular-badge">POPULAR</span><?php endif; ?>
+
+                <div class="plan-header">
+                    <div class="plan-title-line">
+                        <h3><?= htmlspecialchars($nome) ?></h3>
+                        <span class="badge badge-<?= $status === 'ativo' ? 'success' : 'secondary' ?>"><?= ucfirst($status) ?></span>
+                    </div>
+                    <p class="plan-description"><?= htmlspecialchars($descricao ?: 'Acesso completo conforme as condições do plano.') ?></p>
+                    <div class="plan-price">
+                        R$ <?= number_format((float)$plano['valor'], 2, ',', '.') ?>
+                        <span>/ <?= (int)$plano['duracao_meses'] ?> <?= (int)$plano['duracao_meses'] === 1 ? 'mês' : 'meses' ?></span>
+                    </div>
+                </div>
+
+                <ul class="plan-features">
+                    <?php foreach (array_slice($features, 0, 4) as $feature): ?>
+                        <li><?= htmlspecialchars($feature) ?></li>
+                    <?php endforeach; ?>
+                </ul>
+
+                <?php if ($usuarioLogado && in_array($usuarioLogado['perfil'], ['admin', 'recepcionista'], true)): ?>
+                    <div class="plan-actions">
+                        <a class="btn btn-secondary" href="<?= $basePath ?>/planos/edit?id=<?= (int)$plano['id'] ?>">Editar</a>
+                        <form action="<?= $basePath ?>/planos/delete" method="post" onsubmit="return confirm('Excluir este plano?')">
+                            <input type="hidden" name="id" value="<?= (int)$plano['id'] ?>">
+                            <button class="text-danger" type="submit">Excluir</button>
+                        </form>
+                    </div>
+                <?php endif; ?>
+            </article>
+        <?php endforeach; ?>
+    </div>
+<?php endif; ?>
+
+<?php include dirname(__DIR__) . '/layouts/footer.php'; ?>

@@ -43,19 +43,14 @@ include dirname(__DIR__) . '/layouts/header.php';
             </select>
         </div>
         <div class="form-group">
-            <label for="dia_semana" class="form-label">Dia da Semana</label>
-            <select name="dia_semana" id="dia_semana" class="form-control" required>
-                <option value="Segunda-feira" <?= ($treino['dia_semana'] ?? '') === 'Segunda-feira' ? 'selected' : '' ?>>Segunda-feira</option>
-                <option value="Terça-feira" <?= ($treino['dia_semana'] ?? '') === 'Terça-feira' ? 'selected' : '' ?>>Terça-feira</option>
-                <option value="Quarta-feira" <?= ($treino['dia_semana'] ?? '') === 'Quarta-feira' ? 'selected' : '' ?>>Quarta-feira</option>
-                <option value="Quinta-feira" <?= ($treino['dia_semana'] ?? '') === 'Quinta-feira' ? 'selected' : '' ?>>Quinta-feira</option>
-                <option value="Sexta-feira" <?= ($treino['dia_semana'] ?? '') === 'Sexta-feira' ? 'selected' : '' ?>>Sexta-feira</option>
-                <option value="Sábado" <?= ($treino['dia_semana'] ?? '') === 'Sábado' ? 'selected' : '' ?>>Sábado</option>
-            </select>
+            <label for="dia_semana" class="form-label">Objetivo</label>
+            <input type="text" name="dia_semana" id="dia_semana" class="form-control" required
+                   value="<?= htmlspecialchars($treino['dia_semana'] ?? '') ?>"
+                   placeholder="Ex: Hipertrofia, emagrecimento, condicionamento...">
         </div>
         <div class="form-group">
-            <label for="descricao" class="form-label">Descrição do Treino</label>
-            <textarea name="descricao" id="descricao" class="form-control" rows="5" required><?= htmlspecialchars($treino['descricao'] ?? '') ?></textarea>
+            <label for="descricao" class="form-label">Exercícios</label>
+            <textarea name="descricao" id="descricao" class="form-control" rows="7" required><?= htmlspecialchars($treino['descricao'] ?? '') ?></textarea>
         </div>
         <div class="form-actions">
             <button type="submit" class="btn btn-primary">Salvar</button>

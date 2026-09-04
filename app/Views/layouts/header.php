@@ -6,6 +6,36 @@ if ($basePath !== '' && stripos($currentUri, $basePath) === 0) {
     $currentUri = substr($currentUri, strlen($basePath));
 }
 $currentUri = '/' . trim($currentUri, '/');
+if ($currentUri === '//') $currentUri = '/';
+require_once dirname(__DIR__, 2) . '/Helpers/UI.php';
+
+$appConfig = $appConfig ?? [];
+$primaryColor = (string)($appConfig['cor_primaria'] ?? '#2164E9');
+if (!preg_match('/^#[0-9a-fA-F]{6}$/', $primaryColor)) $primaryColor = '#2164E9';
+$defaultDark = (($appConfig['tema'] ?? 'claro') === 'escuro');
+$logoPath = (string)($appConfig['logo_path'] ?? '');
+$logoVisual = $logoPath !== '' && !str_ends_with(strtolower($logoPath), '.pdf');
+$roleLabels = ['admin' => 'Administrador', 'professor' => 'Professor', 'recepcionista' => 'Recepcionista'];
+
+$navItems = [
+    ['/', 'dashboard', 'Dashboard'],
+    ['/alunos', 'users', 'Alunos'],
+    ['/professores', 'teacher', 'Professores'],
+    ['/planos', 'box', 'Planos'],
+    ['/matriculas', 'clipboard', 'Matrículas'],
+    ['/treinos', 'dumbbell', 'Treinos'],
+    ['/pagamentos', 'card', 'Pagamentos'],
+    ['/relatorios', 'chart', 'Relatórios'],
+];
+if ($usuarioLogado && ($usuarioLogado['perfil'] ?? '') === 'admin') {
+    $navItems[] = ['/usuarios', 'user-settings', 'Usuários'];
+    $navItems[] = ['/configuracoes', 'settings', 'Configurações'];
+}
+
+function gmNavActive(string $currentUri, string $route): bool {
+    if ($route === '/') return $currentUri === '/';
+    return stripos($currentUri, $route) === 0;
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -13,45 +43,72 @@ $currentUri = '/' . trim($currentUri, '/');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GymManager</title>
-    <link rel="stylesheet" href="<?= $basePath ?>/css/style.css">
+    <link rel="stylesheet" href="<?= $basePath ?>/css/style.css?v=20260904-prototipo-v3">
+    <style>:root{--primary:<?= htmlspecialchars($primaryColor) ?>}</style>
 </head>
-<body>
-    <div class="app-layout">
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <h2>💪 GymManager</h2>
-            </div>
-            <nav class="sidebar-nav">
-                <a href="<?= $basePath ?>/" class="<?= $currentUri === '/' ? 'active' : '' ?>">Dashboard</a>
-                <a href="<?= $basePath ?>/alunos" class="<?= stripos($currentUri, '/alunos') === 0 ? 'active' : '' ?>">Alunos</a>
-                <a href="<?= $basePath ?>/professores" class="<?= stripos($currentUri, '/professores') === 0 ? 'active' : '' ?>">Professores</a>
-                <a href="<?= $basePath ?>/planos" class="<?= stripos($currentUri, '/planos') === 0 ? 'active' : '' ?>">Planos</a>
-                <a href="<?= $basePath ?>/matriculas" class="<?= stripos($currentUri, '/matriculas') === 0 ? 'active' : '' ?>">Matrículas</a>
-                <a href="<?= $basePath ?>/treinos" class="<?= stripos($currentUri, '/treinos') === 0 ? 'active' : '' ?>">Treinos</a>
-                <a href="<?= $basePath ?>/pagamentos" class="<?= stripos($currentUri, '/pagamentos') === 0 ? 'active' : '' ?>">Pagamentos</a>
-                <a href="<?= $basePath ?>/relatorios" class="<?= stripos($currentUri, '/relatorios') === 0 ? 'active' : '' ?>">Relatórios</a>
-                <?php if ($usuarioLogado && $usuarioLogado['perfil'] === 'admin'): ?>
-                    <a href="<?= $basePath ?>/usuarios" class="<?= stripos($currentUri, '/usuarios') === 0 ? 'active' : '' ?>">Usuários</a>
-                    <a href="<?= $basePath ?>/configuracoes" class="<?= stripos($currentUri, '/configuracoes') === 0 ? 'active' : '' ?>">Configurações</a>
-                <?php endif; ?>
-                <a href="<?= $basePath ?>/perfil" class="nav-profile <?= stripos($currentUri, '/perfil') === 0 ? 'active' : '' ?>">Meu Perfil</a>
-                <a href="<?= $basePath ?>/logout" class="nav-logout">Sair</a>
-            </nav>
-            <div class="sidebar-footer">
-                <?php if ($usuarioLogado): ?>
-                    <p class="user-name"><?= htmlspecialchars($usuarioLogado['nome']) ?></p>
-                    <p class="user-role"><?= ucfirst(htmlspecialchars($usuarioLogado['perfil'])) ?></p>
-                <?php endif; ?>
-            </div>
-        </aside>
-        <main class="main-content">
-            <?php if (!empty($sucesso)): ?>
-                <div class="alert alert-success">
-                    <?= htmlspecialchars((string) $sucesso) ?>
+<body<?= $defaultDark ? ' class="dark"' : '' ?>>
+<div class="app-layout">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="brand-wrap">
+                <?php if ($logoVisual): ?>
+                    <span class="brand-mark brand-mark-image"><img src="<?= htmlspecialchars($basePath . $logoPath) ?>" alt="Logo"></span>
+                <?php else: ?><span class="brand-mark"><?= UI::icon('logo', 24) ?></span><?php endif; ?>
+                <div class="sidebar-brand-copy">
+                    <strong>GymManager</strong>
+                    <span>Gestão de Academias</span>
                 </div>
-            <?php endif; ?>
-            <?php if (!empty($erro)): ?>
-                <div class="alert alert-danger">
-                    <?= htmlspecialchars((string) $erro) ?>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <?php foreach ($navItems as [$route, $icon, $label]): ?>
+                <a href="<?= $basePath . $route ?>" class="<?= gmNavActive($currentUri, $route) ? 'active' : '' ?>">
+                    <?= UI::icon($icon, 18) ?>
+                    <span><?= htmlspecialchars($label) ?></span>
+                </a>
+            <?php endforeach; ?>
+        </nav>
+
+        <div class="sidebar-footer">
+            <?php if ($usuarioLogado): ?>
+                <span class="avatar"><?= htmlspecialchars(UI::initials((string) $usuarioLogado['nome'])) ?></span>
+                <div class="user-meta">
+                    <p class="user-name"><?= htmlspecialchars((string) $usuarioLogado['nome']) ?></p>
+                    <p class="user-role"><?= htmlspecialchars($roleLabels[(string)$usuarioLogado['perfil']] ?? ucfirst((string)$usuarioLogado['perfil'])) ?></p>
                 </div>
+                <a class="logout-icon" href="<?= $basePath ?>/logout" title="Sair"><?= UI::icon('logout', 18) ?></a>
             <?php endif; ?>
+        </div>
+    </aside>
+
+    <header class="topbar">
+        <button class="icon-btn mobile-menu-btn" type="button" data-menu-toggle aria-label="Abrir menu"><?= UI::icon('menu', 20) ?></button>
+        <div class="global-search">
+            <?= UI::icon('search', 19) ?>
+            <input data-global-search data-base="<?= htmlspecialchars($basePath) ?>" type="search" placeholder="Buscar alunos, planos, pagamentos..." autocomplete="off">
+        </div>
+        <div class="topbar-actions">
+            <button class="icon-btn" type="button" data-theme-toggle title="Alternar tema"><?= UI::icon('moon', 19) ?></button>
+            <button class="icon-btn" type="button" title="Notificações">
+                <?= UI::icon('bell', 19) ?><span class="notification-dot"></span>
+            </button>
+            <?php if ($usuarioLogado): ?>
+                <a class="topbar-user" href="<?= $basePath ?>/perfil">
+                    <span class="avatar avatar-lg"><?= htmlspecialchars(UI::initials((string) $usuarioLogado['nome'])) ?></span>
+                    <span class="topbar-user-copy">
+                        <strong><?= htmlspecialchars((string) $usuarioLogado['nome']) ?></strong>
+                        <span><?= htmlspecialchars($roleLabels[(string)$usuarioLogado['perfil']] ?? ucfirst((string)$usuarioLogado['perfil'])) ?></span>
+                    </span>
+                </a>
+            <?php endif; ?>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <?php if (!empty($sucesso)): ?>
+            <div class="alert alert-success"><?= htmlspecialchars((string) $sucesso) ?></div>
+        <?php endif; ?>
+        <?php if (!empty($erro)): ?>
+            <div class="alert alert-danger"><?= htmlspecialchars((string) $erro) ?></div>
+        <?php endif; ?>

@@ -1,66 +1,12 @@
-<?php
-$basePath = defined('BASE_PATH') ? BASE_PATH : '';
-include dirname(__DIR__) . '/layouts/header.php';
-?>
-
-<div class="card">
-    <div class="card-header">
-        <div>
-            <h1 class="page-title">Usuários</h1>
-            <p class="subtitle">Controle de acessos e perfis</p>
-        </div>
-        <a href="<?= $basePath ?>/usuarios/create" class="btn btn-primary">+ Novo Usuário</a>
-    </div>
-
-    <?php if (empty($usuarios)): ?>
-        <div class="empty-state">
-            <p>Nenhum usuário cadastrado.</p>
-        </div>
-    <?php else: ?>
-        <div class="table-responsive">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nome</th>
-                        <th>E-mail</th>
-                        <th>Perfil</th>
-                        <th>Status</th>
-                        <th>Último Login</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($usuarios as $usuario): ?>
-                        <tr>
-                            <td>#<?= $usuario['id'] ?></td>
-                            <td><?= htmlspecialchars($usuario['nome']) ?></td>
-                            <td><?= htmlspecialchars($usuario['email']) ?></td>
-                            <td><span class="badge badge-<?= $usuario['perfil'] ?>"><?= ucfirst(htmlspecialchars($usuario['perfil'])) ?></span></td>
-                            <td>
-                                <span class="badge badge-<?= $usuario['ativo'] ? 'success' : 'danger' ?>">
-                                    <?= $usuario['ativo'] ? 'Ativo' : 'Inativo' ?>
-                                </span>
-                            </td>
-                            <td><?= $usuario['ultimo_login'] ? date('d/m/Y H:i', strtotime($usuario['ultimo_login'])) : 'Nunca' ?></td>
-                            <td>
-                                <div class="actions">
-                                    <a href="<?= $basePath ?>/usuarios/edit?id=<?= $usuario['id'] ?>" class="btn btn-secondary btn-sm">Editar</a>
-                                    <a href="<?= $basePath ?>/usuarios/toggle?id=<?= $usuario['id'] ?>" class="btn btn-secondary btn-sm">Alternar Status</a>
-                                    <form action="<?= $basePath ?>/usuarios/delete" method="post" style="display:inline;" onsubmit="return confirm('Tem certeza?');">
-                                        <input type="hidden" name="id" value="<?= $usuario['id'] ?>">
-                                        <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    <?php endif; ?>
+<?php $basePath = defined('BASE_PATH') ? BASE_PATH : ''; include dirname(__DIR__) . '/layouts/header.php'; ?>
+<div class="page-head"><div><h1 class="page-title">Usuários</h1><p class="subtitle">Controle de acesso e permissões do sistema.</p></div></div>
+<div data-list data-page-size="8">
+    <div class="toolbar"><div class="search-control"><?= UI::icon('search',18) ?><input data-table-search type="search" placeholder="Pesquisar por nome ou e-mail..."></div><div class="filter-select"><?= UI::icon('filter',16) ?><select data-table-filter data-filter-attr="data-perfil"><option value="todos">Todos</option><option value="admin">Administrador</option><option value="recepcionista">Recepcionista</option><option value="professor">Professor</option></select></div><a href="<?= $basePath ?>/usuarios/create" class="btn btn-primary"><?= UI::icon('plus',18) ?> Novo Usuário</a></div>
+    <div class="table-card"><div class="table-responsive"><table class="table"><thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Status</th><th>Ações</th></tr></thead><tbody>
+    <?php foreach ($usuarios as $usuario): $perfil = (string)$usuario['perfil']; ?>
+        <tr data-perfil="<?= htmlspecialchars($perfil) ?>" data-edit-url="<?= $basePath ?>/usuarios/edit?id=<?= (int)$usuario['id'] ?>"><td><strong><?= htmlspecialchars((string)$usuario['nome']) ?></strong></td><td><?= htmlspecialchars((string)$usuario['email']) ?></td><td><span class="badge badge-<?= htmlspecialchars($perfil) ?>"><?= $perfil === 'admin' ? 'Administrador' : ucfirst($perfil) ?></span></td><td><span class="badge badge-<?= !empty($usuario['ativo']) ? 'success' : 'secondary' ?>"><?= !empty($usuario['ativo']) ? 'Ativo' : 'Inativo' ?></span></td><td><?php if ((int)$usuario['id'] !== (int)($usuarioLogado['id'] ?? 0)): ?><form action="<?= $basePath ?>/usuarios/delete" method="post" onsubmit="return confirm('Tem certeza que deseja excluir este usuário?')"><input type="hidden" name="id" value="<?= (int)$usuario['id'] ?>"><button class="text-danger">Excluir</button></form><?php else: ?><span class="text-danger" style="opacity:.55">Excluir</span><?php endif; ?></td></tr>
+    <?php endforeach; ?>
+    <?php if (!$usuarios): ?><tr><td colspan="5"><div class="empty-state">Nenhum usuário cadastrado.</div></td></tr><?php endif; ?>
+    </tbody></table></div><div class="table-footer"><span data-table-count></span><div class="pagination"><button type="button" data-prev>‹ Previous</button><button type="button" class="current" data-page-current>1</button><button type="button" data-next>Next ›</button></div></div></div>
 </div>
-
-<?php
-include dirname(__DIR__) . '/layouts/footer.php';
-?>
+<?php include dirname(__DIR__) . '/layouts/footer.php'; ?>

@@ -24,6 +24,14 @@ abstract class Controller
 
         $data['usuarioLogado'] = $this->usuarioLogado();
 
+        if (!isset($data['appConfig']) && class_exists('ConfiguracaoModel')) {
+            try {
+                $data['appConfig'] = (new ConfiguracaoModel())->todos();
+            } catch (\Throwable $e) {
+                $data['appConfig'] = [];
+            }
+        }
+
         extract($data);
 
         require $viewPath;

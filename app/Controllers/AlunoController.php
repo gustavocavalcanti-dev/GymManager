@@ -14,7 +14,7 @@ class AlunoController extends Controller
 
     public function index(): void
     {
-        $alunos = $this->alunoModel->listarTodos();
+        $alunos = $this->alunoModel->listarComPlanoStatus();
         $this->view('Alunos/index', [
             'alunos' => $alunos
         ]);

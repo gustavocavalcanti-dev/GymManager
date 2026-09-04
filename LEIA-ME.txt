@@ -1,38 +1,51 @@
-GYMMANAGER - PACOTE FINAL REVISADO PARA INFINITYFREE
-Build: 2026.09.04-final-2
+GYMMANAGER — VERSAO VISUAL BASEADA NO PROTOTIPO
+Build: 2026.09.04-prototipo-v3
 
-ENVIE O CONTEUDO desta pasta diretamente para htdocs.
-Nao envie a pasta externa como subpasta.
+UPLOAD NO INFINITYFREE
+Envie o CONTEUDO deste ZIP diretamente para htdocs.
+Nao crie htdocs/gymmanager/...; index.php e .htaccess precisam ficar na raiz de htdocs.
 
-Estrutura esperada:
+Estrutura principal:
 htdocs/
   index.php
   .htaccess
-  diagnostico.php
   css/
+  js/
   app/
+  assets/
   database/
   storage/
+  diagnostico.php   (temporario; apagar depois dos testes)
 
-CORRECOES APLICADAS:
-- Caminhos do index.php ajustados para executar na raiz htdocs.
-- Rewrite do Apache preparado para /login, /alunos, /dashboard etc.
-- TreinoModel corrigido para carregar App\Core\Model.
-- Removida dependencia de mb_strlen/mbstring nas validacoes.
-- Database.php nao usa mais getenv para sobrescrever a senha.
-- Database.php tenta localizar automaticamente o banco da conta se o nome configurado estiver incorreto e houver um unico candidato seguro.
-- Erros de conexao sao registrados em storage/logs/database.log quando a hospedagem permitir.
-- Mensagens flash de sucesso/erro corrigidas nas telas.
-- Migration sem USE gym_manager fixo.
-- app/, database/ e storage/ bloqueados para acesso HTTP direto.
-- diagnostico.php incluido para testar PHP, PDO, credenciais, banco, tabelas e usuario admin sem exibir a senha.
+TELAS ADEQUADAS AO PROTOTIPO
+- Login em layout 50/50.
+- Sidebar fixa de 256px e barra superior de 64px.
+- Dashboard com 6 indicadores, grafico de receita, planos vendidos, novas matriculas e ultimos pagamentos.
+- Alunos, Professores, Matriculas, Treinos, Pagamentos e Usuarios no padrao visual das tabelas do prototipo.
+- Planos em cards, incluindo destaque de plano Premium.
+- Relatorios com filtros, indicadores, graficos e exportacoes.
+- Configuracoes com abas Academia, Aparencia, Seguranca e Backup.
+- Layout responsivo para telas menores.
 
-TESTE:
-1. Acesse /diagnostico.php
-2. Todos os itens principais devem aparecer OK.
-3. Depois acesse /login
-4. Login inicial: admin@gymmanager.com / admin123
-5. Ao finalizar, APAGUE diagnostico.php, teste.php e teste_banco.php.
+FUNCIONALIDADES MANTIDAS
+- Login/logout e perfis de acesso.
+- CRUD de alunos, professores, planos, matriculas, treinos, pagamentos e usuarios.
+- Pesquisa, filtros e paginacao nas listagens.
+- Edicao pela linha da tabela e exclusao pela acao visivel, mantendo a aparencia do prototipo.
+- Dashboard alimentado pelo banco.
+- Relatorios e exportacao para Excel/impressao em PDF.
+- Tema claro/escuro, cor principal e dados da academia.
+- Upload da logo da academia.
 
-SEGURANCA:
-A senha do banco ja apareceu em capturas durante a configuracao. Depois que o deploy estiver funcionando, troque a senha MySQL no painel e atualize app/Config/Database.php.
+BANCO
+Este pacote foi mantido compativel com a estrutura de banco que ja estava em uso no GymManager.
+Nao e necessario apagar nem recriar seu banco somente para aplicar o novo visual.
+
+TESTE APOS O UPLOAD
+1. Abra /diagnostico.php e confirme os itens principais.
+2. Abra /login.
+3. Teste Dashboard, Alunos, Professores, Planos, Matriculas, Treinos, Pagamentos, Relatorios, Usuarios e Configuracoes.
+4. Quando estiver tudo funcionando, APAGUE diagnostico.php do servidor.
+
+SEGURANCA
+Nao deixe arquivos de teste/diagnostico publicados depois da validacao.

@@ -209,10 +209,10 @@ class TreinoController extends Controller
             $erros[] = 'Selecione um Professor.';
         }
         if (empty($dados['descricao'])) {
-            $erros[] = 'O campo Descrição do treino é obrigatório.';
+            $erros[] = 'O campo Exercícios é obrigatório.';
         }
         if (empty($dados['dia_semana'])) {
-            $erros[] = 'O campo Dia da semana é obrigatório.';
+            $erros[] = 'O campo Objetivo é obrigatório.';
         }
         return $erros;
     }

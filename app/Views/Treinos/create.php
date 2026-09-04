@@ -44,20 +44,15 @@ include dirname(__DIR__) . '/layouts/header.php';
             </select>
         </div>
         <div class="form-group">
-            <label for="dia_semana" class="form-label">Dia da Semana</label>
-            <select name="dia_semana" id="dia_semana" class="form-control" required>
-                <option value="">Selecione o Dia</option>
-                <option value="Segunda-feira" <?= ($dados['dia_semana'] ?? '') === 'Segunda-feira' ? 'selected' : '' ?>>Segunda-feira</option>
-                <option value="Terça-feira" <?= ($dados['dia_semana'] ?? '') === 'Terça-feira' ? 'selected' : '' ?>>Terça-feira</option>
-                <option value="Quarta-feira" <?= ($dados['dia_semana'] ?? '') === 'Quarta-feira' ? 'selected' : '' ?>>Quarta-feira</option>
-                <option value="Quinta-feira" <?= ($dados['dia_semana'] ?? '') === 'Quinta-feira' ? 'selected' : '' ?>>Quinta-feira</option>
-                <option value="Sexta-feira" <?= ($dados['dia_semana'] ?? '') === 'Sexta-feira' ? 'selected' : '' ?>>Sexta-feira</option>
-                <option value="Sábado" <?= ($dados['dia_semana'] ?? '') === 'Sábado' ? 'selected' : '' ?>>Sábado</option>
-            </select>
+            <label for="dia_semana" class="form-label">Objetivo</label>
+            <input type="text" name="dia_semana" id="dia_semana" class="form-control" required
+                   value="<?= htmlspecialchars($dados['dia_semana'] ?? '') ?>"
+                   placeholder="Ex: Hipertrofia, emagrecimento, condicionamento...">
         </div>
         <div class="form-group">
-            <label for="descricao" class="form-label">Descrição do Treino</label>
-            <textarea name="descricao" id="descricao" class="form-control" rows="5" required placeholder="Ex: 3 séries de 10 repetições de supino, agachamento..."><?= htmlspecialchars($dados['descricao'] ?? '') ?></textarea>
+            <label for="descricao" class="form-label">Exercícios</label>
+            <textarea name="descricao" id="descricao" class="form-control" rows="7" required
+                      placeholder="Digite os exercícios do treino, de preferência um por linha."><?= htmlspecialchars($dados['descricao'] ?? '') ?></textarea>
         </div>
         <div class="form-actions">
             <button type="submit" class="btn btn-primary">Salvar</button>

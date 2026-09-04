@@ -1,73 +1,32 @@
 <?php
 $basePath = defined('BASE_PATH') ? BASE_PATH : '';
 include dirname(__DIR__) . '/layouts/header.php';
+$recebido = 0; $pendente = 0; $vencido = 0;
+foreach ($pagamentos as $p) {
+    $st = strtolower((string)$p['status']);
+    if ($st === 'pago') $recebido += (float)$p['valor'];
+    elseif ($st === 'pendente') $pendente += (float)$p['valor'];
+    else $vencido += (float)$p['valor'];
+}
 ?>
-
-<div class="card">
-    <div class="card-header">
-        <div>
-            <h1 class="page-title">Pagamentos</h1>
-            <p class="subtitle">Histórico e registro de mensalidades pagas</p>
-        </div>
-        <?php if ($usuarioLogado && in_array($usuarioLogado['perfil'], ['admin', 'recepcionista'], true)): ?>
-            <a href="<?= $basePath ?>/pagamentos/create" class="btn btn-primary">+ Registrar Pagamento</a>
-        <?php endif; ?>
-    </div>
-
-    <?php if (empty($pagamentos)): ?>
-        <div class="empty-state">
-            <p>Nenhum pagamento registrado.</p>
-        </div>
-    <?php else: ?>
-        <div class="table-responsive">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Aluno</th>
-                        <th>Plano</th>
-                        <th>Valor Pago</th>
-                        <th>Data do Pagamento</th>
-                        <th>Forma de Pagamento</th>
-                        <th>Status</th>
-                        <?php if ($usuarioLogado && in_array($usuarioLogado['perfil'], ['admin', 'recepcionista'], true)): ?>
-                            <th>Ações</th>
-                        <?php endif; ?>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($pagamentos as $pag): ?>
-                        <tr>
-                            <td>#<?= $pag['id'] ?></td>
-                            <td><?= htmlspecialchars($pag['aluno_nome']) ?></td>
-                            <td><?= htmlspecialchars($pag['plano_nome']) ?></td>
-                            <td>R$ <?= number_format((float)$pag['valor'], 2, ',', '.') ?></td>
-                            <td><?= date('d/m/Y', strtotime($pag['data_pagamento'])) ?></td>
-                            <td><?= ucfirst(htmlspecialchars($pag['forma_pagamento'])) ?></td>
-                            <td>
-                                <span class="badge badge-<?= $pag['status'] === 'pago' ? 'success' : ($pag['status'] === 'pendente' ? 'warning' : 'danger') ?>">
-                                    <?= ucfirst(htmlspecialchars($pag['status'])) ?>
-                                </span>
-                            </td>
-                            <?php if ($usuarioLogado && in_array($usuarioLogado['perfil'], ['admin', 'recepcionista'], true)): ?>
-                                <td>
-                                    <div class="actions">
-                                        <a href="<?= $basePath ?>/pagamentos/edit?id=<?= $pag['id'] ?>" class="btn btn-secondary btn-sm">Editar</a>
-                                        <form action="<?= $basePath ?>/pagamentos/delete" method="post" style="display:inline;" onsubmit="return confirm('Tem certeza?');">
-                                            <input type="hidden" name="id" value="<?= $pag['id'] ?>">
-                                            <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            <?php endif; ?>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    <?php endif; ?>
+<div class="page-head"><div><h1 class="page-title">Pagamentos</h1><p class="subtitle">Gestão financeira e controle de mensalidades.</p></div></div>
+<div class="stats-grid" style="grid-template-columns:repeat(3,minmax(0,1fr));">
+    <div class="stat-card" style="min-height:88px"><div class="stat-icon green"><?= UI::icon('money',21) ?></div><div class="stat-label">Recebido no mês</div><div class="stat-value" style="font-size:22px">R$ <?= number_format($recebido,2,',','.') ?></div></div>
+    <div class="stat-card" style="min-height:88px"><div class="stat-icon orange"><?= UI::icon('clock',21) ?></div><div class="stat-label">Pendentes</div><div class="stat-value" style="font-size:22px">R$ <?= number_format($pendente,2,',','.') ?></div></div>
+    <div class="stat-card" style="min-height:88px"><div class="stat-icon red"><?= UI::icon('alert',21) ?></div><div class="stat-label">Vencidos</div><div class="stat-value" style="font-size:22px">R$ <?= number_format($vencido,2,',','.') ?></div></div>
 </div>
-
-<?php
-include dirname(__DIR__) . '/layouts/footer.php';
-?>
+<div data-list data-page-size="8">
+    <div class="toolbar"><div class="search-control"><?= UI::icon('search',18) ?><input data-table-search type="search" placeholder="Pesquisar por aluno..."></div><div class="filter-select"><?= UI::icon('filter',16) ?><select data-table-filter data-filter-attr="data-status"><option value="todos">Todos</option><option value="pago">Pago</option><option value="pendente">Pendente</option><option value="vencido">Vencido</option></select></div><div class="filter-select"><?= UI::icon('filter',16) ?><select data-table-filter data-filter-attr="data-forma"><option value="todos">Todos</option><option value="pix">Pix</option><option value="cartao_credito">Cartão</option><option value="cartao_debito">Débito</option><option value="boleto">Boleto</option><option value="dinheiro">Dinheiro</option></select></div><?php if ($usuarioLogado && in_array($usuarioLogado['perfil'],['admin','recepcionista'],true)): ?><a href="<?= $basePath ?>/pagamentos/create" class="btn btn-primary"><?= UI::icon('plus',18) ?> Registrar Pagamento</a><?php endif; ?></div>
+    <div class="table-card"><div class="table-responsive"><table class="table"><thead><tr><th>Código</th><th>Aluno</th><th>Plano</th><th>Forma</th><th>Data</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead><tbody>
+    <?php foreach ($pagamentos as $pag):
+        $rawStatus = strtolower((string)$pag['status']);
+        $status = $rawStatus === 'cancelado' ? 'vencido' : $rawStatus;
+        $forma = (string)$pag['forma_pagamento'];
+        $formaLabel = ['pix'=>'Pix','cartao_credito'=>'Cartão','cartao_debito'=>'Cartão','boleto'=>'Boleto','dinheiro'=>'Dinheiro'][$forma] ?? ucwords(str_replace('_',' ',$forma));
+    ?>
+        <tr data-status="<?= htmlspecialchars($status) ?>" data-forma="<?= htmlspecialchars($forma) ?>" data-edit-url="<?= $basePath ?>/pagamentos/edit?id=<?= (int)$pag['id'] ?>"><td>PG<?= str_pad((string)(int)$pag['id'],4,'0',STR_PAD_LEFT) ?></td><td><strong><?= htmlspecialchars((string)$pag['aluno_nome']) ?></strong></td><td><?= htmlspecialchars((string)$pag['plano_nome']) ?></td><td><?= htmlspecialchars($formaLabel) ?></td><td><?= date('d/m/Y',strtotime((string)$pag['data_pagamento'])) ?></td><td>R$ <?= number_format((float)$pag['valor'],2,',','.') ?></td><td><span class="badge badge-<?= $status === 'pago' ? 'success' : ($status === 'pendente' ? 'warning' : 'danger') ?>"><?= ucfirst($status) ?></span></td><td><?php if ($usuarioLogado && in_array($usuarioLogado['perfil'],['admin','recepcionista'],true)): ?><form action="<?= $basePath ?>/pagamentos/delete" method="post" onsubmit="return confirm('Tem certeza que deseja excluir este pagamento?')"><input type="hidden" name="id" value="<?= (int)$pag['id'] ?>"><button class="text-danger">Excluir</button></form><?php endif; ?></td></tr>
+    <?php endforeach; ?>
+    <?php if (!$pagamentos): ?><tr><td colspan="8"><div class="empty-state">Nenhum pagamento registrado.</div></td></tr><?php endif; ?>
+    </tbody></table></div><div class="table-footer"><span data-table-count></span><div class="pagination"><button type="button" data-prev>‹ Previous</button><button type="button" class="current" data-page-current>1</button><button type="button" data-next>Next ›</button></div></div></div>
+</div>
+<?php include dirname(__DIR__) . '/layouts/footer.php'; ?>

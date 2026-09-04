@@ -1,71 +1,12 @@
-<?php
-$basePath = defined('BASE_PATH') ? BASE_PATH : '';
-include dirname(__DIR__) . '/layouts/header.php';
-?>
-
-<div class="card">
-    <div class="card-header">
-        <div>
-            <h1 class="page-title">Matrículas</h1>
-            <p class="subtitle">Controle de matrículas e planos de alunos</p>
-        </div>
-        <?php if ($usuarioLogado && in_array($usuarioLogado['perfil'], ['admin', 'recepcionista'], true)): ?>
-            <a href="<?= $basePath ?>/matriculas/create" class="btn btn-primary">+ Nova Matrícula</a>
-        <?php endif; ?>
-    </div>
-
-    <?php if (empty($matriculas)): ?>
-        <div class="empty-state">
-            <p>Nenhuma matrícula registrada.</p>
-        </div>
-    <?php else: ?>
-        <div class="table-responsive">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Aluno</th>
-                        <th>Plano</th>
-                        <th>Data Início</th>
-                        <th>Data Fim</th>
-                        <th>Status</th>
-                        <?php if ($usuarioLogado && in_array($usuarioLogado['perfil'], ['admin', 'recepcionista'], true)): ?>
-                            <th>Ações</th>
-                        <?php endif; ?>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($matriculas as $mat): ?>
-                        <tr>
-                            <td>#<?= $mat['id'] ?></td>
-                            <td><?= htmlspecialchars($mat['aluno_nome']) ?></td>
-                            <td><?= htmlspecialchars($mat['plano_nome']) ?></td>
-                            <td><?= date('d/m/Y', strtotime($mat['data_inicio'])) ?></td>
-                            <td><?= date('d/m/Y', strtotime($mat['data_fim'])) ?></td>
-                            <td>
-                                <span class="badge badge-<?= $mat['status'] === 'ativa' ? 'success' : ($mat['status'] === 'cancelada' ? 'danger' : 'secondary') ?>">
-                                    <?= ucfirst(htmlspecialchars($mat['status'])) ?>
-                                </span>
-                            </td>
-                            <?php if ($usuarioLogado && in_array($usuarioLogado['perfil'], ['admin', 'recepcionista'], true)): ?>
-                                <td>
-                                    <div class="actions">
-                                        <a href="<?= $basePath ?>/matriculas/edit?id=<?= $mat['id'] ?>" class="btn btn-secondary btn-sm">Editar</a>
-                                        <form action="<?= $basePath ?>/matriculas/delete" method="post" style="display:inline;" onsubmit="return confirm('Tem certeza?');">
-                                            <input type="hidden" name="id" value="<?= $mat['id'] ?>">
-                                            <button type="submit" class="btn btn-danger btn-sm">Excluir</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            <?php endif; ?>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
-    <?php endif; ?>
+<?php $basePath = defined('BASE_PATH') ? BASE_PATH : ''; include dirname(__DIR__) . '/layouts/header.php'; ?>
+<div class="page-head"><div><h1 class="page-title">Matrículas</h1><p class="subtitle">Controle todas as matrículas ativas e pendentes.</p></div></div>
+<div data-list data-page-size="8">
+    <div class="toolbar"><div class="search-control"><?= UI::icon('search',18) ?><input data-table-search type="search" placeholder="Pesquisar por aluno..."></div><div class="filter-select"><?= UI::icon('filter',16) ?><select data-table-filter data-filter-attr="data-status"><option value="todos">Todos</option><option value="ativa">Ativa</option><option value="pendente">Pendente</option><option value="cancelada">Cancelada</option><option value="expirada">Expirada</option></select></div><?php if ($usuarioLogado && in_array($usuarioLogado['perfil'], ['admin','recepcionista'], true)): ?><a href="<?= $basePath ?>/matriculas/create" class="btn btn-primary"><?= UI::icon('plus',18) ?> Nova Matrícula</a><?php endif; ?></div>
+    <div class="table-card"><div class="table-responsive"><table class="table"><thead><tr><th>Código</th><th>Aluno</th><th>Plano</th><th>Início</th><th>Término</th><th>Valor</th><th>Status</th><th>Ações</th></tr></thead><tbody>
+    <?php foreach ($matriculas as $mat): $status = strtolower((string)$mat['status']); ?>
+        <tr data-status="<?= htmlspecialchars($status) ?>" data-edit-url="<?= $basePath ?>/matriculas/edit?id=<?= (int)$mat['id'] ?>"><td>MT<?= str_pad((string)(int)$mat['id'],4,'0',STR_PAD_LEFT) ?></td><td><strong><?= htmlspecialchars((string)$mat['aluno_nome']) ?></strong></td><td><?= htmlspecialchars((string)$mat['plano_nome']) ?></td><td><?= date('d/m/Y',strtotime((string)$mat['data_inicio'])) ?></td><td><?= date('d/m/Y',strtotime((string)$mat['data_fim'])) ?></td><td>R$ <?= number_format((float)($mat['plano_valor'] ?? 0),2,',','.') ?></td><td><span class="badge badge-<?= $status === 'ativa' ? 'success' : ($status === 'pendente' ? 'warning' : ($status === 'cancelada' ? 'danger' : 'secondary')) ?>"><?= ucfirst($status) ?></span></td><td><?php if ($usuarioLogado && in_array($usuarioLogado['perfil'],['admin','recepcionista'],true)): ?><form action="<?= $basePath ?>/matriculas/delete" method="post" onsubmit="return confirm('Tem certeza que deseja excluir esta matrícula?')"><input type="hidden" name="id" value="<?= (int)$mat['id'] ?>"><button class="text-danger">Excluir</button></form><?php endif; ?></td></tr>
+    <?php endforeach; ?>
+    <?php if (!$matriculas): ?><tr><td colspan="8"><div class="empty-state">Nenhuma matrícula registrada.</div></td></tr><?php endif; ?>
+    </tbody></table></div><div class="table-footer"><span data-table-count></span><div class="pagination"><button type="button" data-prev>‹ Previous</button><button type="button" class="current" data-page-current>1</button><button type="button" data-next>Next ›</button></div></div></div>
 </div>
-
-<?php
-include dirname(__DIR__) . '/layouts/footer.php';
-?>
+<?php include dirname(__DIR__) . '/layouts/footer.php'; ?>

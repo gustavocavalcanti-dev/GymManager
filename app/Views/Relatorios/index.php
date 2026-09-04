@@ -1,40 +1,12 @@
 <?php
-$basePath = defined('BASE_PATH') ? BASE_PATH : '';
-include dirname(__DIR__) . '/layouts/header.php';
+$basePath=defined('BASE_PATH')?BASE_PATH:''; include dirname(__DIR__).'/layouts/header.php';
+$receitaMensal=$receitaMensal??[]; $novasMatriculas=$novasMatriculas??[];
+$months=array_column($receitaMensal,'mes'); $receitas=array_map(fn($r)=>(float)$r['total'],$receitaMensal);
+$matMonths=array_column($novasMatriculas,'mes'); $matValues=array_map(fn($r)=>(int)$r['total'],$novasMatriculas);
+function gmReportLine(array $values,array $labels): string {$w=520;$h=235;$l=52;$r=14;$t=18;$b=30;$pw=$w-$l-$r;$ph=$h-$t-$b;$max=max(1,...($values?:[1]));$n=max(1,count($values));$pts=[];foreach($values as $i=>$v){$x=$l+($n===1?$pw/2:$pw*$i/($n-1));$y=$t+$ph-((float)$v/$max*$ph*.9);$pts[]=[round($x,1),round($y,1)];}$poly=implode(' ',array_map(fn($p)=>$p[0].','.$p[1],$pts));ob_start();?><svg class="chart-svg" viewBox="0 0 <?= $w ?> <?= $h ?>" preserveAspectRatio="none"><?php for($i=0;$i<=4;$i++):$y=$t+$ph*$i/4;$v=$max*(1-$i/4);?><line class="chart-grid-line" x1="<?= $l ?>" y1="<?= $y ?>" x2="<?= $l+$pw ?>" y2="<?= $y ?>"/><text class="chart-axis-label" x="0" y="<?= $y+4 ?>">R$ <?= number_format($v/1000,0,',','.') ?>k</text><?php endfor;?><polyline class="chart-line" points="<?= $poly ?>"/><?php foreach($pts as $i=>$p):?><circle cx="<?= $p[0] ?>" cy="<?= $p[1] ?>" r="3" fill="#fff" stroke="#2164e9" stroke-width="2"/><text class="chart-axis-label" x="<?= $p[0]-8 ?>" y="<?= $h-7 ?>"><?= htmlspecialchars((string)($labels[$i]??'')) ?></text><?php endforeach;?></svg><?php return (string)ob_get_clean();}
 ?>
-
-<div class="card">
-    <div class="card-header">
-        <div>
-            <h1 class="page-title">Relatórios Gerenciais</h1>
-            <p class="subtitle">Estatísticas gerais de uso e faturamento</p>
-        </div>
-    </div>
-
-    <div class="dashboard-grid" style="margin-top: 16px;">
-        <div class="stat-card" style="border-left: 4px solid var(--primary);">
-            <h3>Total de Alunos</h3>
-            <p class="stat-number"><?= $totalAlunos ?></p>
-        </div>
-        <div class="stat-card" style="border-left: 4px solid var(--primary);">
-            <h3>Total de Professores</h3>
-            <p class="stat-number"><?= $totalProfessores ?></p>
-        </div>
-        <div class="stat-card" style="border-left: 4px solid var(--primary);">
-            <h3>Total de Planos</h3>
-            <p class="stat-number"><?= $totalPlanos ?></p>
-        </div>
-        <div class="stat-card" style="border-left: 4px solid var(--primary);">
-            <h3>Matrículas Totais</h3>
-            <p class="stat-number"><?= $totalMatriculas ?></p>
-        </div>
-        <div class="stat-card" style="background-color: var(--success-bg); border-left: 4px solid var(--success);">
-            <h3>Total Faturado</h3>
-            <p class="stat-number" style="color: var(--success);">R$ <?= number_format($totalFaturamento, 2, ',', '.') ?></p>
-        </div>
-    </div>
-</div>
-
-<?php
-include dirname(__DIR__) . '/layouts/footer.php';
-?>
+<div class="page-head"><div><h1 class="page-title">Relatórios</h1><p class="subtitle">Analise a performance da academia em diferentes períodos.</p></div><div class="page-actions"><a class="btn btn-secondary" href="<?= $basePath ?>/relatorios/imprimir" target="_blank"><?= UI::icon('clipboard',17) ?> Exportar PDF</a><a class="btn btn-secondary" href="<?= $basePath ?>/relatorios/exportar-excel"><?= UI::icon('database',17) ?> Exportar Excel</a></div></div>
+<form method="get" action="<?= $basePath ?>/relatorios" class="panel filter-panel"><div class="filter-panel-title"><?= UI::icon('filter',18) ?> Filtros</div><div class="report-filter-grid"><div><label class="form-label">Tipo</label><select class="form-control" name="tipo"><option value="receita">Receita</option><option value="matriculas" <?= ($_GET['tipo']??'')==='matriculas'?'selected':'' ?>>Matrículas</option></select></div><div><label class="form-label">De</label><input class="form-control" type="date" name="de" value="<?= htmlspecialchars((string)($de??date('Y-01-01'))) ?>"></div><div><label class="form-label">Até</label><input class="form-control" type="date" name="ate" value="<?= htmlspecialchars((string)($ate??date('Y-m-d'))) ?>"></div><button class="btn btn-primary" type="submit">Aplicar filtros</button></div></form>
+<div class="report-stats"><div class="panel report-stat"><div class="stat-label">Receita total no período</div><div class="stat-value">R$ <?= number_format((float)$totalFaturamento,2,',','.') ?></div></div><div class="panel report-stat"><div class="stat-label">Alunos ativos</div><div class="stat-value"><?= (int)($alunosAtivos??$totalAlunos) ?></div></div><div class="panel report-stat"><div class="stat-label">Inadimplentes</div><div class="stat-value"><?= (int)($inadimplentes??0) ?></div></div><div class="panel report-stat"><div class="stat-label">Ticket médio</div><div class="stat-value">R$ <?= number_format((float)($ticketMedio??0),2,',','.') ?></div></div></div>
+<div class="report-charts"><section class="chart-card"><h3>Receita por mês</h3><?= gmReportLine($receitas,$months) ?></section><section class="chart-card"><h3>Novas matrículas por mês</h3><?php $max=max(1,...($matValues?:[1]));?><div class="bar-chart"><?php foreach($matValues as $i=>$v):?><div class="bar-group"><div class="bar green" style="height:<?= max(4,$v/$max*88) ?>%"></div><span class="bar-label"><?= htmlspecialchars((string)($matMonths[$i]??'')) ?></span></div><?php endforeach;?><?php if(!$matValues):?><div class="empty-state">Sem dados</div><?php endif;?></div></section></div>
+<?php include dirname(__DIR__).'/layouts/footer.php'; ?>
