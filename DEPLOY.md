@@ -1,101 +1,79 @@
-# Deploy do GymManager no Render
+# Deploy simples do GymManager
 
-Este projeto usa Docker para publicar PHP 8.2 com Apache no Render. O banco precisa
-ser um MySQL externo, pois o Render não fornece MySQL gerenciado nativo para este app.
+O GymManager é uma aplicação PHP com MySQL. Para publicar sem Docker, use uma
+hospedagem com PHP, Apache e MySQL, como cPanel, Hostinger ou Locaweb.
 
-## 1. Preparar o banco MySQL
+> O Render não oferece execução nativa de PHP. Sem Docker, este projeto não roda como
+> Web Service no Render. Para usar Render seria necessário Docker ou migrar o sistema
+> para outra tecnologia.
 
-Crie um banco MySQL acessível pela internet e importe:
+## 1. Criar o banco
+
+No painel da hospedagem, crie um banco MySQL e um usuário com acesso a ele.
+Depois importe o arquivo:
 
 ```text
 database/schema.sql
 ```
 
-Guarde estes dados:
+## 2. Enviar os arquivos
+
+Envie o projeto por Git, FTP ou pelo gerenciador de arquivos da hospedagem.
+Configure o domínio para apontar para:
 
 ```text
-DB_HOST=host-do-mysql
-DB_PORT=3306
-DB_DATABASE=gym_manager
-DB_USERNAME=usuario
-DB_PASSWORD=senha
-DB_CHARSET=utf8mb4
+public/
 ```
 
-O provedor do banco precisa aceitar conexões externas. Se houver whitelist de IP,
-configure-a conforme as instruções do provedor.
+O servidor precisa ter:
 
-## 2. Enviar o projeto para o GitHub
+- PHP 8.1 ou superior
+- Apache com `mod_rewrite`
+- Extensão PHP `pdo_mysql`
+- MySQL 8 ou MariaDB 10.5+
 
-O repositório precisa conter estes arquivos:
+## 3. Configurar o banco
+
+Edite `app/Config/Database.php` com os dados fornecidos pela hospedagem:
+
+```php
+return [
+    'host'     => 'localhost',
+    'port'     => '3306',
+    'dbname'   => 'nome_do_banco',
+    'user'     => 'usuario_do_banco',
+    'password' => 'senha_do_banco',
+    'charset'  => 'utf8mb4',
+];
+```
+
+Não publique esse arquivo com a senha em repositórios públicos.
+
+## 4. Abrir o sistema
+
+Acesse:
 
 ```text
-Dockerfile
-render.yaml
-public/index.php
-app/Config/Database.php
-database/schema.sql
+https://seu-dominio.com/login
 ```
 
-Não envie `.env` nem senhas no código. As credenciais serão cadastradas como variáveis
-secretas no Render.
-
-## 3. Criar o serviço no Render
-
-1. Acesse o painel do Render e escolha **New > Blueprint**.
-2. Conecte o repositório do GymManager.
-3. Selecione a branch `main`.
-4. Confirme o serviço definido em `render.yaml`.
-5. Inicie o deploy.
-
-O Render usará o `Dockerfile`, instalará `pdo_mysql` e publicará somente o diretório
-`public/`. O health check configurado é `/login`.
-
-## 4. Configurar variáveis
-
-No serviço, abra **Environment** e preencha:
-
-| Variável | Valor |
-|---|---|
-| `DB_HOST` | Host do MySQL externo |
-| `DB_PORT` | `3306` |
-| `DB_DATABASE` | `gym_manager` |
-| `DB_USERNAME` | Usuário do banco |
-| `DB_PASSWORD` | Senha do banco, como secret |
-| `DB_CHARSET` | `utf8mb4` |
-
-Salve e faça um novo deploy após alterar variáveis.
-
-## 5. Testar a publicação
-
-Quando o deploy ficar verde, abra:
+Login inicial:
 
 ```text
-https://SEU-SERVICO.onrender.com/login
+E-mail: admin@gymmanager.com
+Senha: admin123
 ```
 
-Teste:
+Troque a senha imediatamente após o primeiro acesso.
 
-- Login: `admin@gymmanager.com`
-- Senha inicial: `admin123`
-- Acesso à página inicial após o login
-- Logout
-- Redirecionamento de páginas protegidas sem sessão
+## 5. Verificação final
 
-Troque a senha do administrador imediatamente após o primeiro acesso.
+- A tela `/login` abre sem erro.
+- O login leva ao dashboard.
+- O logout volta para `/login`.
+- Páginas protegidas redirecionam usuários sem sessão.
+- Cadastro de aluno e listagens funcionam.
+- O banco não apresenta erro de conexão.
 
-## 6. Solução de problemas
-
-**Health check falha:** confirme que `/login` responde e que o deploy está usando a
-branch correta.
-
-**Erro de conexão com banco:** revise `DB_HOST`, porta, usuário, senha e permissão
-de conexões externas no provedor MySQL.
-
-**Erro “table doesn't exist”:** importe `database/schema.sql` no banco configurado.
-
-**Login volta para a própria tela:** confirme o banco, o usuário administrador e se
-o token CSRF está sendo mantido pelos cookies do navegador.
-
-**Deploy não encontra arquivos:** confirme que `Dockerfile`, `render.yaml` e
-`app/Config/Database.php` foram enviados ao GitHub.
+Se aparecer erro de conexão, revise host, porta, banco, usuário, senha e a extensão
+`pdo_mysql` no painel da hospedagem.
