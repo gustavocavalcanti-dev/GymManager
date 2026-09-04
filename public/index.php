@@ -8,6 +8,16 @@ if (session_status() === PHP_SESSION_NONE) {
 
 spl_autoload_register(function (string $class): void {
     $baseDirectory = dirname(__DIR__) . '/app/';
+    $namespacedClass = str_replace('\\', '/', $class);
+
+    if (str_starts_with($namespacedClass, 'App/')) {
+        $candidate = $baseDirectory . substr($namespacedClass, 4) . '.php';
+        if (file_exists($candidate)) {
+            require_once $candidate;
+            return;
+        }
+    }
+
     $paths = [
         $baseDirectory . 'Core/',
         $baseDirectory . 'Controllers/',
@@ -27,7 +37,7 @@ spl_autoload_register(function (string $class): void {
         }
     }
 
-    $candidate = $baseDirectory . str_replace('\\', '/', $class) . '.php';
+    $candidate = $baseDirectory . $namespacedClass . '.php';
     if (file_exists($candidate)) {
         require_once $candidate;
     }

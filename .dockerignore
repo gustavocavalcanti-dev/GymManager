@@ -1,0 +1,7 @@
+.git
+.env
+database/backup
+storage/logs
+storage/temp
+README.md
+DEPLOY.md

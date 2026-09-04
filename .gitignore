@@ -1,10 +1,8 @@
 # Configurações sensíveis - NUNCA commitar
 .env
-app/Config/Database.php
 
-# Documentação local (não vai para o GitHub)
+# Documentação
 README.md
-DEPLOY.md
 .env.example
 
 # Dependências (se usar Composer no futuro)
