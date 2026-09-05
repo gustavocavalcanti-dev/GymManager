@@ -11,10 +11,10 @@ class RecepcionistaMiddleware
         }
 
         $usuario = $_SESSION['usuario'] ?? null;
-        $perfisPermitidos = ['admin', 'recepcionista'];
+        $permitidos = ['administrador', 'atendente'];
 
-        if ($usuario === null || !in_array($usuario['perfil'], $perfisPermitidos, true)) {
-            $_SESSION['flash']['erro'] = 'Acesso negado. Apenas recepcionistas e administradores podem acessar esta área.';
+        if ($usuario === null || !in_array((string)($usuario['perfil'] ?? ''), $permitidos, true)) {
+            $_SESSION['flash']['erro'] = 'Acesso negado. Apenas recepcionistas e administradores podem realizar esta operação.';
             $basePath = defined('BASE_PATH') ? BASE_PATH : '';
             header('Location: ' . $basePath . '/');
             exit;

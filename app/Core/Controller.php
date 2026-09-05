@@ -27,38 +27,36 @@ abstract class Controller
         if (!isset($data['appConfig']) && class_exists('ConfiguracaoModel')) {
             try {
                 $data['appConfig'] = (new ConfiguracaoModel())->todos();
-            } catch (\Throwable $e) {
+            } catch (\Throwable) {
                 $data['appConfig'] = [];
             }
         }
 
         extract($data);
-
         require $viewPath;
     }
 
     protected function setFlash(string $chave, mixed $valor): void
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        $this->garantirSessao();
         $_SESSION['flash'][$chave] = $valor;
     }
 
     protected function getFlash(string $chave): mixed
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+        $this->garantirSessao();
+
+        if (!array_key_exists($chave, $_SESSION['flash'] ?? [])) {
+            return null;
         }
-        if (isset($_SESSION['flash'][$chave])) {
-            $valor = $_SESSION['flash'][$chave];
-            unset($_SESSION['flash'][$chave]);
-            return $valor;
-        }
-        return null;
+
+        $valor = $_SESSION['flash'][$chave];
+        unset($_SESSION['flash'][$chave]);
+
+        return $valor;
     }
 
-    protected function redirect(string $caminho): void
+    protected function redirect(string $caminho): never
     {
         $basePath = defined('BASE_PATH') ? BASE_PATH : '';
         $url = $basePath . '/' . ltrim($caminho, '/');
@@ -68,21 +66,38 @@ abstract class Controller
 
     protected function usuarioLogado(): ?array
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        $this->garantirSessao();
         return $_SESSION['usuario'] ?? null;
     }
 
     protected function temPermissao(string $perfil): bool
     {
         $usuario = $this->usuarioLogado();
+
         if ($usuario === null) {
             return false;
         }
-        if ($usuario['perfil'] === 'admin') {
+
+        return ($usuario['perfil'] ?? '') === 'administrador'
+            || ($usuario['perfil'] ?? '') === $perfil;
+    }
+
+    protected function validarCSRF(string $redirecionarPara): bool
+    {
+        $token = (string)($_POST['csrf_token'] ?? '');
+
+        if (Security::validarTokenCSRF($token)) {
             return true;
         }
-        return $usuario['perfil'] === $perfil;
+
+        $this->setFlash('erro', 'Token de segurança inválido. Atualize a página e tente novamente.');
+        $this->redirect($redirecionarPara);
+    }
+
+    private function garantirSessao(): void
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
     }
 }

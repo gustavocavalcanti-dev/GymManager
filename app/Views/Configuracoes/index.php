@@ -25,13 +25,13 @@ $logoPath = (string)($config['logo_path'] ?? '');
         <div><label class="form-label">Facebook</label><input class="form-control" name="facebook" value="<?= htmlspecialchars((string)($config['facebook'] ?? '/gymmanager')) ?>"></div>
         <div class="full"><label class="form-label">Logo da academia</label></div>
         <label class="upload-box">
-            <input type="file" name="logo" accept="image/png,image/jpeg,application/pdf" hidden>
+            <input type="file" name="logo" accept="image/png,image/jpeg" hidden>
             <div>
                 <?php if ($logoPath !== '' && !str_ends_with(strtolower($logoPath), '.pdf')): ?>
                     <img class="logo-preview" src="<?= htmlspecialchars($basePath . $logoPath) ?>" alt="Logo atual"><br>
                 <?php else: ?><?= UI::icon('upload',25) ?><?php endif; ?>
                 <strong style="display:block;margin-top:10px">Arraste uma imagem ou clique para enviar</strong>
-                <small>PNG, JPG ou PDF de até 5MB</small>
+                <small>PNG ou JPG de até 5MB</small>
             </div>
         </label>
     </div>

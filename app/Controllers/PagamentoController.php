@@ -2,204 +2,183 @@
 
 declare(strict_types=1);
 
-
-
+use App\Models\Matricula;
+use App\Models\Pagamento;
 
 class PagamentoController extends Controller
 {
-    protected PagamentoModel $pagamentoModel;
-    protected MatriculaModel $matriculaModel;
+    private Pagamento $model;
+    private Matricula $matriculaModel;
 
     public function __construct()
     {
-        $this->pagamentoModel = new PagamentoModel();
-        $this->matriculaModel = new MatriculaModel();
+        $this->model = new Pagamento();
+        $this->matriculaModel = new Matricula();
     }
 
     public function index(): void
     {
-        $pagamentos = $this->pagamentoModel->listarComDetalhes();
-        $this->view('Pagamentos/index', [
-            'pagamentos' => $pagamentos
-        ]);
+        $this->view('Pagamentos/index', ['pagamentos' => $this->model->listarComDetalhes()]);
     }
 
     public function create(): void
     {
-        $matriculas = $this->matriculaModel->listarComDetalhes();
         $this->view('Pagamentos/create', [
-            'matriculas' => $matriculas,
             'dados' => [
-                'matricula_id' => '',
-                'valor' => '',
-                'data_pagamento' => date('Y-m-d'),
-                'forma_pagamento' => 'pix',
-                'status' => 'pago'
+                'matricula_id' => '', 'valor' => '', 'data_vencimento' => date('Y-m-d'),
+                'data_pagamento' => '', 'forma_pagamento' => '', 'status' => 'pendente',
             ],
-            'erros' => []
+            'matriculas' => $this->matriculaModel->listarComDetalhes(),
+            'erros' => [],
         ]);
     }
 
     public function store(): void
     {
-        $dados = [
-            'matricula_id' => (int) ($_POST['matricula_id'] ?? 0),
-            'valor' => (float) ($_POST['valor'] ?? 0.00),
-            'data_pagamento' => trim($_POST['data_pagamento'] ?? ''),
-            'forma_pagamento' => trim($_POST['forma_pagamento'] ?? 'pix'),
-            'status' => trim($_POST['status'] ?? 'pago')
-        ];
-
+        $this->validarCSRF('/pagamentos');
+        $dados = $this->dadosFormulario();
         $erros = $this->validarDados($dados);
 
-        if (!empty($erros)) {
-            $matriculas = $this->matriculaModel->listarComDetalhes();
-            $this->view('Pagamentos/create', [
-                'matriculas' => $matriculas,
-                'dados' => $dados,
-                'erros' => $erros
-            ]);
+        if ($erros !== []) {
+            $this->renderFormulario('Pagamentos/create', $dados, $erros);
             return;
         }
 
         try {
-            $resultado = $this->pagamentoModel->cadastrar($dados);
-            if ($resultado) {
-                $this->setFlash('sucesso', 'Pagamento registrado com sucesso!');
-                $this->redirect('/pagamentos');
-                return;
-            }
-            $this->view('Pagamentos/create', [
-                'matriculas' => $this->matriculaModel->listarComDetalhes(),
-                'dados' => $dados,
-                'erros' => ['Não foi possível salvar o pagamento.']
-            ]);
+            $this->model->cadastrar($dados);
+            $this->model->atualizarAtrasados();
+            $this->setFlash('sucesso', 'Pagamento registrado com sucesso!');
+            $this->redirect('/pagamentos');
         } catch (\Throwable $e) {
-            $this->view('Pagamentos/create', [
-                'matriculas' => $this->matriculaModel->listarComDetalhes(),
-                'dados' => $dados,
-                'erros' => ['Erro ao cadastrar: ' . $e->getMessage()]
-            ]);
+            $this->renderFormulario('Pagamentos/create', $dados, ['Erro ao registrar pagamento: ' . $e->getMessage()]);
         }
     }
 
     public function edit(): void
     {
-        $id = (int) ($_GET['id'] ?? 0);
-        if ($id <= 0) {
-            $this->setFlash('erro', 'Código do pagamento inválido.');
-            $this->redirect('/pagamentos');
-            return;
-        }
+        $id = (int)($_GET['id'] ?? 0);
+        $pagamento = $id > 0 ? $this->model->buscarPorId($id) : false;
 
-        $pagamento = $this->pagamentoModel->buscaPorId($id);
         if (!$pagamento) {
             $this->setFlash('erro', 'Pagamento não encontrado.');
             $this->redirect('/pagamentos');
-            return;
         }
-
-        $matriculas = $this->matriculaModel->listarComDetalhes();
 
         $this->view('Pagamentos/edit', [
             'pagamento' => $pagamento,
-            'matriculas' => $matriculas,
-            'erros' => []
+            'matriculas' => $this->matriculaModel->listarComDetalhes(),
+            'erros' => [],
         ]);
     }
 
     public function update(): void
     {
-        $id = (int) ($_POST['id'] ?? $_GET['id'] ?? 0);
-        if ($id <= 0) {
-            $this->setFlash('erro', 'Código do pagamento inválido.');
-            $this->redirect('/pagamentos');
-            return;
-        }
+        $this->validarCSRF('/pagamentos');
+        $id = (int)($_POST['id'] ?? 0);
 
-        $pagamentoAtual = $this->pagamentoModel->buscaPorId($id);
-        if (!$pagamentoAtual) {
+        if ($id <= 0 || !$this->model->buscarPorId($id)) {
             $this->setFlash('erro', 'Pagamento não encontrado.');
             $this->redirect('/pagamentos');
-            return;
         }
 
-        $dados = [
-            'matricula_id' => (int) ($_POST['matricula_id'] ?? 0),
-            'valor' => (float) ($_POST['valor'] ?? 0.00),
-            'data_pagamento' => trim($_POST['data_pagamento'] ?? ''),
-            'forma_pagamento' => trim($_POST['forma_pagamento'] ?? 'pix'),
-            'status' => trim($_POST['status'] ?? 'pago')
-        ];
-
+        $dados = $this->dadosFormulario();
         $erros = $this->validarDados($dados);
 
-        if (!empty($erros)) {
-            $matriculas = $this->matriculaModel->listarComDetalhes();
+        if ($erros !== []) {
             $this->view('Pagamentos/edit', [
                 'pagamento' => array_merge(['id' => $id], $dados),
-                'matriculas' => $matriculas,
-                'erros' => $erros
+                'matriculas' => $this->matriculaModel->listarComDetalhes(),
+                'erros' => $erros,
             ]);
             return;
         }
 
         try {
-            $resultado = $this->pagamentoModel->editar($id, $dados);
-            if ($resultado) {
-                $this->setFlash('sucesso', 'Pagamento atualizado com sucesso!');
-                $this->redirect('/pagamentos');
-                return;
-            }
-            $this->view('Pagamentos/edit', [
-                'pagamento' => array_merge(['id' => $id], $dados),
-                'matriculas' => $this->matriculaModel->listarComDetalhes(),
-                'erros' => ['Não foi possível atualizar.']
-            ]);
+            $this->model->atualizar($id, $dados);
+            $this->model->atualizarAtrasados();
+            $this->setFlash('sucesso', 'Pagamento atualizado com sucesso!');
+            $this->redirect('/pagamentos');
         } catch (\Throwable $e) {
-            $this->view('Pagamentos/edit', [
-                'pagamento' => array_merge(['id' => $id], $dados),
-                'matriculas' => $this->matriculaModel->listarComDetalhes(),
-                'erros' => ['Erro ao atualizar: ' . $e->getMessage()]
-            ]);
+            $this->setFlash('erro', 'Erro ao atualizar pagamento: ' . $e->getMessage());
+            $this->redirect('/pagamentos');
         }
     }
 
     public function delete(): void
     {
-        $id = (int) ($_POST['id'] ?? $_GET['id'] ?? 0);
-        if ($id <= 0) {
-            $this->setFlash('erro', 'Código do pagamento inválido.');
+        $this->validarCSRF('/pagamentos');
+        $id = (int)($_POST['id'] ?? 0);
+
+        if ($id <= 0 || !$this->model->buscarPorId($id)) {
+            $this->setFlash('erro', 'Pagamento não encontrado.');
             $this->redirect('/pagamentos');
-            return;
         }
 
         try {
-            $resultado = $this->pagamentoModel->excluir($id);
-            if ($resultado) {
-                $this->setFlash('sucesso', 'Pagamento excluído com sucesso!');
-            } else {
-                $this->setFlash('erro', 'Não foi possível excluir.');
-            }
+            $this->model->excluir($id);
+            $this->setFlash('sucesso', 'Pagamento excluído com sucesso!');
         } catch (\Throwable $e) {
-            $this->setFlash('erro', 'Erro ao excluir: ' . $e->getMessage());
+            $this->setFlash('erro', 'Erro ao excluir pagamento: ' . $e->getMessage());
         }
 
         $this->redirect('/pagamentos');
     }
 
+    private function dadosFormulario(): array
+    {
+        $valor = str_replace(',', '.', trim((string)($_POST['valor'] ?? '0')));
+        $status = (string)($_POST['status'] ?? 'pendente');
+        $dataPagamento = trim((string)($_POST['data_pagamento'] ?? ''));
+        $forma = (string)($_POST['forma_pagamento'] ?? '');
+
+        if ($status === 'pago' && $dataPagamento === '') {
+            $dataPagamento = date('Y-m-d');
+        }
+
+        return [
+            'matricula_id' => (int)($_POST['matricula_id'] ?? 0),
+            'valor' => (float)$valor,
+            'data_vencimento' => (string)($_POST['data_vencimento'] ?? ''),
+            'data_pagamento' => $dataPagamento !== '' ? $dataPagamento : null,
+            'forma_pagamento' => in_array($forma, ['dinheiro', 'pix', 'cartao', 'boleto'], true) ? $forma : null,
+            'status' => in_array($status, ['pendente', 'pago', 'atrasado', 'cancelado'], true) ? $status : 'pendente',
+        ];
+    }
+
     private function validarDados(array $dados): array
     {
         $erros = [];
-        if ($dados['matricula_id'] <= 0) {
-            $erros[] = 'Selecione uma Matrícula.';
+
+        if ($dados['matricula_id'] <= 0 || !$this->matriculaModel->buscarPorId($dados['matricula_id'])) {
+            $erros[] = 'Selecione uma matrícula válida.';
         }
+
         if ($dados['valor'] <= 0) {
             $erros[] = 'O valor deve ser maior que zero.';
         }
-        if (empty($dados['data_pagamento'])) {
-            $erros[] = 'Data do pagamento é obrigatória.';
+
+        if (strtotime($dados['data_vencimento']) === false) {
+            $erros[] = 'Informe uma data de vencimento válida.';
         }
+
+        if ($dados['status'] === 'pago') {
+            if ($dados['data_pagamento'] === null || strtotime($dados['data_pagamento']) === false) {
+                $erros[] = 'Pagamento marcado como pago precisa de uma data de pagamento.';
+            }
+            if ($dados['forma_pagamento'] === null) {
+                $erros[] = 'Informe a forma de pagamento.';
+            }
+        }
+
         return $erros;
+    }
+
+    private function renderFormulario(string $view, array $dados, array $erros): void
+    {
+        $this->view($view, [
+            'dados' => $dados,
+            'matriculas' => $this->matriculaModel->listarComDetalhes(),
+            'erros' => $erros,
+        ]);
     }
 }

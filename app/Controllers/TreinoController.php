@@ -2,218 +2,183 @@
 
 declare(strict_types=1);
 
-
+use App\Models\Aluno;
+use App\Models\Professor;
+use App\Models\Treino;
 
 class TreinoController extends Controller
 {
-    protected TreinoModel $treinoModel;
-    protected AlunoModel $alunoModel;
-    protected ProfessorModel $professorModel;
+    private Treino $model;
+    private Aluno $alunoModel;
+    private Professor $professorModel;
 
     public function __construct()
     {
-        $this->treinoModel = new TreinoModel();
-        $this->alunoModel = new AlunoModel();
-        $this->professorModel = new ProfessorModel();
+        $this->model = new Treino();
+        $this->alunoModel = new Aluno();
+        $this->professorModel = new Professor();
     }
 
     public function index(): void
     {
-        $treinos = $this->treinoModel->listarComDetalhes();
-        $this->view('Treinos/index', [
-            'treinos' => $treinos
-        ]);
+        $this->view('Treinos/index', ['treinos' => $this->model->listarComDetalhes()]);
     }
 
     public function create(): void
     {
-        $alunos = $this->alunoModel->listarTodos();
-        $professores = $this->professorModel->listarTodos();
-
         $this->view('Treinos/create', [
-            'alunos' => $alunos,
-            'professores' => $professores,
             'dados' => [
-                'aluno_id' => '',
-                'professor_id' => '',
-                'descricao' => '',
-                'dia_semana' => ''
+                'aluno_id' => '', 'professor_id' => '', 'nome' => '', 'objetivo' => '',
+                'descricao' => '', 'data_inicio' => date('Y-m-d'), 'data_fim' => '', 'status' => 'ativo',
             ],
-            'erros' => []
+            'alunos' => $this->alunoModel->listarTodos(),
+            'professores' => $this->professorModel->listarTodos(),
+            'erros' => [],
         ]);
     }
 
     public function store(): void
     {
-        $dados = [
-            'aluno_id' => (int) ($_POST['aluno_id'] ?? 0),
-            'professor_id' => (int) ($_POST['professor_id'] ?? 0),
-            'descricao' => trim($_POST['descricao'] ?? ''),
-            'dia_semana' => trim($_POST['dia_semana'] ?? '')
-        ];
-
+        $this->validarCSRF('/treinos');
+        $dados = $this->dadosFormulario();
         $erros = $this->validarDados($dados);
 
-        if (!empty($erros)) {
-            $alunos = $this->alunoModel->listarTodos();
-            $professores = $this->professorModel->listarTodos();
-            $this->view('Treinos/create', [
-                'alunos' => $alunos,
-                'professores' => $professores,
-                'dados' => $dados,
-                'erros' => $erros
-            ]);
+        if ($erros !== []) {
+            $this->renderFormulario('Treinos/create', $dados, $erros);
             return;
         }
 
         try {
-            $resultado = $this->treinoModel->cadastrar($dados);
-            if ($resultado) {
-                $this->setFlash('sucesso', 'Treino cadastrado com sucesso!');
-                $this->redirect('/treinos');
-                return;
-            }
-            $this->view('Treinos/create', [
-                'alunos' => $this->alunoModel->listarTodos(),
-                'professores' => $this->professorModel->listarTodos(),
-                'dados' => $dados,
-                'erros' => ['Não foi possível salvar o treino.']
-            ]);
+            $this->model->cadastrar($dados);
+            $this->setFlash('sucesso', 'Treino cadastrado com sucesso!');
+            $this->redirect('/treinos');
         } catch (\Throwable $e) {
-            $this->view('Treinos/create', [
-                'alunos' => $this->alunoModel->listarTodos(),
-                'professores' => $this->professorModel->listarTodos(),
-                'dados' => $dados,
-                'erros' => ['Erro ao cadastrar: ' . $e->getMessage()]
-            ]);
+            $this->renderFormulario('Treinos/create', $dados, ['Erro ao cadastrar treino: ' . $e->getMessage()]);
         }
     }
 
     public function edit(): void
     {
-        $id = (int) ($_GET['id'] ?? 0);
-        if ($id <= 0) {
-            $this->setFlash('erro', 'Código do treino inválido.');
-            $this->redirect('/treinos');
-            return;
-        }
+        $id = (int)($_GET['id'] ?? 0);
+        $treino = $id > 0 ? $this->model->buscarPorId($id) : false;
 
-        $treino = $this->treinoModel->buscaPorId($id);
         if (!$treino) {
             $this->setFlash('erro', 'Treino não encontrado.');
             $this->redirect('/treinos');
-            return;
         }
-
-        $alunos = $this->alunoModel->listarTodos();
-        $professores = $this->professorModel->listarTodos();
 
         $this->view('Treinos/edit', [
             'treino' => $treino,
-            'alunos' => $alunos,
-            'professores' => $professores,
-            'erros' => []
+            'alunos' => $this->alunoModel->listarTodos(),
+            'professores' => $this->professorModel->listarTodos(),
+            'erros' => [],
         ]);
     }
 
     public function update(): void
     {
-        $id = (int) ($_POST['id'] ?? $_GET['id'] ?? 0);
-        if ($id <= 0) {
-            $this->setFlash('erro', 'Código do treino inválido.');
-            $this->redirect('/treinos');
-            return;
-        }
+        $this->validarCSRF('/treinos');
+        $id = (int)($_POST['id'] ?? 0);
 
-        $treinoAtual = $this->treinoModel->buscaPorId($id);
-        if (!$treinoAtual) {
+        if ($id <= 0 || !$this->model->buscarPorId($id)) {
             $this->setFlash('erro', 'Treino não encontrado.');
             $this->redirect('/treinos');
-            return;
         }
 
-        $dados = [
-            'aluno_id' => (int) ($_POST['aluno_id'] ?? 0),
-            'professor_id' => (int) ($_POST['professor_id'] ?? 0),
-            'descricao' => trim($_POST['descricao'] ?? ''),
-            'dia_semana' => trim($_POST['dia_semana'] ?? '')
-        ];
-
+        $dados = $this->dadosFormulario();
         $erros = $this->validarDados($dados);
 
-        if (!empty($erros)) {
-            $alunos = $this->alunoModel->listarTodos();
-            $professores = $this->professorModel->listarTodos();
+        if ($erros !== []) {
             $this->view('Treinos/edit', [
                 'treino' => array_merge(['id' => $id], $dados),
-                'alunos' => $alunos,
-                'professores' => $professores,
-                'erros' => $erros
+                'alunos' => $this->alunoModel->listarTodos(),
+                'professores' => $this->professorModel->listarTodos(),
+                'erros' => $erros,
             ]);
             return;
         }
 
         try {
-            $resultado = $this->treinoModel->editar($id, $dados);
-            if ($resultado) {
-                $this->setFlash('sucesso', 'Treino atualizado com sucesso!');
-                $this->redirect('/treinos');
-                return;
-            }
-            $this->view('Treinos/edit', [
-                'treino' => array_merge(['id' => $id], $dados),
-                'alunos' => $this->alunoModel->listarTodos(),
-                'professores' => $this->professorModel->listarTodos(),
-                'erros' => ['Não foi possível atualizar.']
-            ]);
+            $this->model->atualizar($id, $dados);
+            $this->setFlash('sucesso', 'Treino atualizado com sucesso!');
+            $this->redirect('/treinos');
         } catch (\Throwable $e) {
-            $this->view('Treinos/edit', [
-                'treino' => array_merge(['id' => $id], $dados),
-                'alunos' => $this->alunoModel->listarTodos(),
-                'professores' => $this->professorModel->listarTodos(),
-                'erros' => ['Erro ao atualizar: ' . $e->getMessage()]
-            ]);
+            $this->setFlash('erro', 'Erro ao atualizar treino: ' . $e->getMessage());
+            $this->redirect('/treinos');
         }
     }
 
     public function delete(): void
     {
-        $id = (int) ($_POST['id'] ?? $_GET['id'] ?? 0);
-        if ($id <= 0) {
-            $this->setFlash('erro', 'Código do treino inválido.');
+        $this->validarCSRF('/treinos');
+        $id = (int)($_POST['id'] ?? 0);
+
+        if ($id <= 0 || !$this->model->buscarPorId($id)) {
+            $this->setFlash('erro', 'Treino não encontrado.');
             $this->redirect('/treinos');
-            return;
         }
 
         try {
-            $resultado = $this->treinoModel->excluir($id);
-            if ($resultado) {
-                $this->setFlash('sucesso', 'Treino excluído com sucesso!');
-            } else {
-                $this->setFlash('erro', 'Não foi possível excluir.');
-            }
+            $this->model->excluir($id);
+            $this->setFlash('sucesso', 'Treino excluído com sucesso!');
         } catch (\Throwable $e) {
-            $this->setFlash('erro', 'Erro ao excluir: ' . $e->getMessage());
+            $this->setFlash('erro', 'Erro ao excluir treino: ' . $e->getMessage());
         }
 
         $this->redirect('/treinos');
     }
 
+    private function dadosFormulario(): array
+    {
+        $status = (string)($_POST['status'] ?? 'ativo');
+        $dataFim = trim((string)($_POST['data_fim'] ?? ''));
+
+        return [
+            'aluno_id' => (int)($_POST['aluno_id'] ?? 0),
+            'professor_id' => (int)($_POST['professor_id'] ?? 0),
+            'nome' => trim((string)($_POST['nome'] ?? '')),
+            'objetivo' => trim((string)($_POST['objetivo'] ?? '')),
+            'descricao' => trim((string)($_POST['descricao'] ?? '')),
+            'data_inicio' => (string)($_POST['data_inicio'] ?? ''),
+            'data_fim' => $dataFim !== '' ? $dataFim : null,
+            'status' => in_array($status, ['ativo', 'finalizado'], true) ? $status : 'ativo',
+        ];
+    }
+
     private function validarDados(array $dados): array
     {
         $erros = [];
-        if ($dados['aluno_id'] <= 0) {
-            $erros[] = 'Selecione um Aluno.';
+
+        if ($dados['aluno_id'] <= 0 || !$this->alunoModel->buscarPorId($dados['aluno_id'])) {
+            $erros[] = 'Selecione um aluno válido.';
         }
-        if ($dados['professor_id'] <= 0) {
-            $erros[] = 'Selecione um Professor.';
+
+        if ($dados['professor_id'] <= 0 || !$this->professorModel->buscarPorId($dados['professor_id'])) {
+            $erros[] = 'Selecione um professor válido.';
         }
-        if (empty($dados['descricao'])) {
-            $erros[] = 'O campo Exercícios é obrigatório.';
+
+        if (strlen($dados['nome']) < 2) {
+            $erros[] = 'Informe um nome para o treino.';
         }
-        if (empty($dados['dia_semana'])) {
-            $erros[] = 'O campo Objetivo é obrigatório.';
+
+        if (strtotime($dados['data_inicio']) === false) {
+            $erros[] = 'Informe uma data inicial válida.';
         }
+
+        if ($dados['data_fim'] !== null && $dados['data_fim'] < $dados['data_inicio']) {
+            $erros[] = 'A data final não pode ser anterior à data inicial.';
+        }
+
         return $erros;
+    }
+
+    private function renderFormulario(string $view, array $dados, array $erros): void
+    {
+        $this->view($view, [
+            'dados' => $dados,
+            'alunos' => $this->alunoModel->listarTodos(),
+            'professores' => $this->professorModel->listarTodos(),
+            'erros' => $erros,
+        ]);
     }
 }

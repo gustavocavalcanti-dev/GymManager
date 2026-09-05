@@ -64,9 +64,11 @@ if(!$segments) $segments=['#e5e7eb 0% 100%'];
         <h1 class="page-title">Dashboard</h1>
         <p class="subtitle">Visão geral da sua academia — <?= htmlspecialchars($mesAnoAtual) ?></p>
     </div>
+    <?php if (($usuarioLogado['perfil'] ?? '') === 'administrador'): ?>
     <div class="page-actions">
         <a class="btn btn-secondary" href="<?= $basePath ?>/relatorios/exportar-excel"><?= UI::icon('download',18) ?> Exportar</a>
     </div>
+    <?php endif; ?>
 </div>
 
 <div class="stats-grid">

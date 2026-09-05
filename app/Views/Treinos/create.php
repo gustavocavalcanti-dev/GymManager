@@ -1,66 +1,14 @@
-<?php
-$basePath = defined('BASE_PATH') ? BASE_PATH : '';
-include dirname(__DIR__) . '/layouts/header.php';
-?>
-
-<div class="card">
-    <div class="card-header">
-        <div>
-            <h1 class="page-title">Cadastrar Novo Treino</h1>
-        </div>
-    </div>
-
-    <?php if (!empty($erros)): ?>
-        <div class="alert alert-danger">
-            <ul>
-                <?php foreach ($erros as $erro): ?>
-                    <li><?= htmlspecialchars($erro) ?></li>
-                <?php endforeach; ?>
-            </ul>
-        </div>
-    <?php endif; ?>
-
-    <form action="<?= $basePath ?>/treinos/store" method="post">
-        <div class="form-group">
-            <label for="aluno_id" class="form-label">Aluno</label>
-            <select name="aluno_id" id="aluno_id" class="form-control" required>
-                <option value="">Selecione um Aluno</option>
-                <?php foreach ($alunos as $aluno): ?>
-                    <option value="<?= $aluno['id'] ?>" <?= (int)($dados['aluno_id'] ?? 0) === (int)$aluno['id'] ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($aluno['nome']) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="professor_id" class="form-label">Professor</label>
-            <select name="professor_id" id="professor_id" class="form-control" required>
-                <option value="">Selecione um Professor</option>
-                <?php foreach ($professores as $prof): ?>
-                    <option value="<?= $prof['id'] ?>" <?= (int)($dados['professor_id'] ?? 0) === (int)$prof['id'] ? 'selected' : '' ?>>
-                        <?= htmlspecialchars($prof['nome']) ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="dia_semana" class="form-label">Objetivo</label>
-            <input type="text" name="dia_semana" id="dia_semana" class="form-control" required
-                   value="<?= htmlspecialchars($dados['dia_semana'] ?? '') ?>"
-                   placeholder="Ex: Hipertrofia, emagrecimento, condicionamento...">
-        </div>
-        <div class="form-group">
-            <label for="descricao" class="form-label">Exercícios</label>
-            <textarea name="descricao" id="descricao" class="form-control" rows="7" required
-                      placeholder="Digite os exercícios do treino, de preferência um por linha."><?= htmlspecialchars($dados['descricao'] ?? '') ?></textarea>
-        </div>
-        <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Salvar</button>
-            <a href="<?= $basePath ?>/treinos" class="btn btn-secondary">Cancelar</a>
-        </div>
-    </form>
-</div>
-
-<?php
-include dirname(__DIR__) . '/layouts/footer.php';
-?>
+<?php $basePath=defined('BASE_PATH')?BASE_PATH:''; include dirname(__DIR__).'/layouts/header.php'; ?>
+<div class="page-head"><div><h1 class="page-title">Novo Treino</h1><p class="subtitle">Prescreva um treino completo para o aluno.</p></div></div>
+<div class="card"><?php if(!empty($erros)):?><div class="alert alert-danger"><ul><?php foreach($erros as $erro):?><li><?=htmlspecialchars((string)$erro)?></li><?php endforeach;?></ul></div><?php endif;?>
+<form action="<?=$basePath?>/treinos/store" method="post"><?=Security::campoCSRF()?><div class="form-grid">
+<div class="form-group"><label class="form-label">Aluno</label><select class="form-control" name="aluno_id" required><option value="">Selecione</option><?php foreach($alunos as $a):?><option value="<?=(int)$a['id']?>" <?=((string)($dados['aluno_id']??''))===(string)$a['id']?'selected':''?>><?=htmlspecialchars((string)$a['nome'])?></option><?php endforeach;?></select></div>
+<div class="form-group"><label class="form-label">Professor responsável</label><select class="form-control" name="professor_id" required><option value="">Selecione</option><?php foreach($professores as $p):?><option value="<?=(int)$p['id']?>" <?=((string)($dados['professor_id']??''))===(string)$p['id']?'selected':''?>><?=htmlspecialchars((string)$p['nome'])?></option><?php endforeach;?></select></div>
+<div class="form-group"><label class="form-label">Nome do treino</label><input class="form-control" name="nome" required placeholder="Ex.: Treino A — Peito e tríceps" value="<?=htmlspecialchars((string)($dados['nome']??''))?>"></div>
+<div class="form-group"><label class="form-label">Objetivo</label><input class="form-control" name="objetivo" placeholder="Ex.: Hipertrofia" value="<?=htmlspecialchars((string)($dados['objetivo']??''))?>"></div>
+<div class="form-group"><label class="form-label">Data de início</label><input class="form-control" type="date" name="data_inicio" required value="<?=htmlspecialchars((string)($dados['data_inicio']??''))?>"></div>
+<div class="form-group"><label class="form-label">Data de término</label><input class="form-control" type="date" name="data_fim" value="<?=htmlspecialchars((string)($dados['data_fim']??''))?>"></div>
+<div class="form-group"><label class="form-label">Status</label><select class="form-control" name="status"><option value="ativo" <?=($dados['status']??'')==='ativo'?'selected':''?>>Ativo</option><option value="finalizado" <?=($dados['status']??'')==='finalizado'?'selected':''?>>Finalizado</option></select></div>
+<div class="form-group" style="grid-column:1/-1"><label class="form-label">Exercícios / observações</label><textarea class="form-control" rows="7" name="descricao" placeholder="Supino reto — 4x10&#10;Crucifixo — 3x12&#10;Tríceps corda — 3x12"><?=htmlspecialchars((string)($dados['descricao']??''))?></textarea></div>
+</div><div class="form-actions"><button class="btn btn-primary">Salvar</button><a class="btn btn-secondary" href="<?=$basePath?>/treinos">Cancelar</a></div></form></div>
+<?php include dirname(__DIR__).'/layouts/footer.php'; ?>

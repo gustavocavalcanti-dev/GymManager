@@ -2,185 +2,160 @@
 
 declare(strict_types=1);
 
-
-
+use App\Models\Professor;
 
 class ProfessorController extends Controller
 {
-    protected ProfessorModel $professorModel;
+    private Professor $model;
 
     public function __construct()
     {
-        $this->professorModel = new ProfessorModel();
+        $this->model = new Professor();
     }
 
     public function index(): void
     {
-        $professores = $this->professorModel->listarTodos();
-        $this->view('Professores/index', [
-            'professores' => $professores
-        ]);
+        $this->view('Professores/index', ['professores' => $this->model->listarTodos()]);
     }
 
     public function create(): void
     {
         $this->view('Professores/create', [
             'dados' => [
-                'nome' => '',
-                'email' => '',
-                'telefone' => '',
-                'especialidade' => ''
+                'nome' => '', 'cpf' => '', 'email' => '', 'telefone' => '',
+                'especialidade' => '', 'cref' => '', 'status' => 'ativo',
             ],
-            'erros' => []
+            'erros' => [],
         ]);
     }
 
     public function store(): void
     {
-        $dados = [
-            'nome' => trim($_POST['nome'] ?? ''),
-            'email' => trim($_POST['email'] ?? ''),
-            'telefone' => trim($_POST['telefone'] ?? ''),
-            'especialidade' => trim($_POST['especialidade'] ?? '')
-        ];
-
+        $this->validarCSRF('/professores');
+        $dados = $this->dadosFormulario();
         $erros = $this->validarDados($dados);
 
-        if (!empty($erros)) {
-            $this->view('Professores/create', [
-                'dados' => $dados,
-                'erros' => $erros
-            ]);
+        if ($this->model->cpfExiste($dados['cpf'])) $erros[] = 'Este CPF já está cadastrado.';
+        if ($this->model->emailExiste($dados['email'])) $erros[] = 'Este e-mail já está cadastrado.';
+        if ($this->model->crefExiste($dados['cref'])) $erros[] = 'Este CREF já está cadastrado.';
+
+        if ($erros !== []) {
+            $this->view('Professores/create', compact('dados', 'erros'));
             return;
         }
 
+        $dados['cref'] = $dados['cref'] !== '' ? $dados['cref'] : null;
+
         try {
-            $resultado = $this->professorModel->cadastrar($dados);
-            if ($resultado) {
-                $this->setFlash('sucesso', 'Professor cadastrado com sucesso!');
-                $this->redirect('/professores');
-                return;
-            }
-            $this->view('Professores/create', [
-                'dados' => $dados,
-                'erros' => ['Não foi possível salvar o professor.']
-            ]);
+            $this->model->cadastrar($dados);
+            $this->setFlash('sucesso', 'Professor cadastrado com sucesso!');
+            $this->redirect('/professores');
         } catch (\Throwable $e) {
-            $this->view('Professores/create', [
-                'dados' => $dados,
-                'erros' => ['Erro ao cadastrar: ' . $e->getMessage()]
-            ]);
+            $erros = ['Erro ao cadastrar professor: ' . $e->getMessage()];
+            $this->view('Professores/create', compact('dados', 'erros'));
         }
     }
 
     public function edit(): void
     {
-        $id = (int) ($_GET['id'] ?? 0);
-        if ($id <= 0) {
-            $this->setFlash('erro', 'Código do professor inválido.');
-            $this->redirect('/professores');
-            return;
-        }
+        $id = (int)($_GET['id'] ?? 0);
+        $professor = $id > 0 ? $this->model->buscarPorId($id) : false;
 
-        $professor = $this->professorModel->buscaPorId($id);
         if (!$professor) {
             $this->setFlash('erro', 'Professor não encontrado.');
             $this->redirect('/professores');
-            return;
         }
 
-        $this->view('Professores/edit', [
-            'professor' => $professor,
-            'erros' => []
-        ]);
+        $this->view('Professores/edit', ['professor' => $professor, 'erros' => []]);
     }
 
     public function update(): void
     {
-        $id = (int) ($_POST['id'] ?? $_GET['id'] ?? 0);
-        if ($id <= 0) {
-            $this->setFlash('erro', 'Código do professor inválido.');
-            $this->redirect('/professores');
-            return;
-        }
+        $this->validarCSRF('/professores');
+        $id = (int)($_POST['id'] ?? 0);
 
-        $professorAtual = $this->professorModel->buscaPorId($id);
-        if (!$professorAtual) {
+        if ($id <= 0 || !$this->model->buscarPorId($id)) {
             $this->setFlash('erro', 'Professor não encontrado.');
             $this->redirect('/professores');
-            return;
         }
 
-        $dados = [
-            'nome' => trim($_POST['nome'] ?? ''),
-            'email' => trim($_POST['email'] ?? ''),
-            'telefone' => trim($_POST['telefone'] ?? ''),
-            'especialidade' => trim($_POST['especialidade'] ?? '')
-        ];
-
+        $dados = $this->dadosFormulario();
         $erros = $this->validarDados($dados);
 
-        if (!empty($erros)) {
+        if ($this->model->cpfExiste($dados['cpf'], $id)) $erros[] = 'Este CPF já pertence a outro professor.';
+        if ($this->model->emailExiste($dados['email'], $id)) $erros[] = 'Este e-mail já pertence a outro professor.';
+        if ($this->model->crefExiste($dados['cref'], $id)) $erros[] = 'Este CREF já pertence a outro professor.';
+
+        if ($erros !== []) {
             $this->view('Professores/edit', [
                 'professor' => array_merge(['id' => $id], $dados),
-                'erros' => $erros
+                'erros' => $erros,
             ]);
             return;
         }
 
+        $dados['cref'] = $dados['cref'] !== '' ? $dados['cref'] : null;
+
         try {
-            $resultado = $this->professorModel->editar($id, $dados);
-            if ($resultado) {
-                $this->setFlash('sucesso', 'Professor atualizado com sucesso!');
-                $this->redirect('/professores');
-                return;
-            }
-            $this->view('Professores/edit', [
-                'professor' => array_merge(['id' => $id], $dados),
-                'erros' => ['Não foi possível atualizar.']
-            ]);
+            $this->model->atualizar($id, $dados);
+            $this->setFlash('sucesso', 'Professor atualizado com sucesso!');
+            $this->redirect('/professores');
         } catch (\Throwable $e) {
             $this->view('Professores/edit', [
                 'professor' => array_merge(['id' => $id], $dados),
-                'erros' => ['Erro ao atualizar: ' . $e->getMessage()]
+                'erros' => ['Erro ao atualizar professor: ' . $e->getMessage()],
             ]);
         }
     }
 
     public function delete(): void
     {
-        $id = (int) ($_POST['id'] ?? $_GET['id'] ?? 0);
-        if ($id <= 0) {
-            $this->setFlash('erro', 'Código do professor inválido.');
+        $this->validarCSRF('/professores');
+        $id = (int)($_POST['id'] ?? 0);
+
+        if ($id <= 0 || !$this->model->buscarPorId($id)) {
+            $this->setFlash('erro', 'Professor não encontrado.');
             $this->redirect('/professores');
-            return;
         }
 
         try {
-            $resultado = $this->professorModel->excluir($id);
-            if ($resultado) {
-                $this->setFlash('sucesso', 'Professor excluído com sucesso!');
-            } else {
-                $this->setFlash('erro', 'Não foi possível excluir.');
-            }
+            $this->model->excluir($id);
+            $this->setFlash('sucesso', 'Professor excluído com sucesso!');
         } catch (\Throwable $e) {
-            $this->setFlash('erro', 'Erro ao excluir: ' . $e->getMessage());
+            $this->setFlash('erro', 'Não foi possível excluir o professor: ' . $e->getMessage());
         }
 
         $this->redirect('/professores');
     }
 
+    private function dadosFormulario(): array
+    {
+        return [
+            'nome' => trim((string)($_POST['nome'] ?? '')),
+            'cpf' => $this->formatarCpf((string)($_POST['cpf'] ?? '')),
+            'email' => trim((string)($_POST['email'] ?? '')),
+            'telefone' => trim((string)($_POST['telefone'] ?? '')),
+            'especialidade' => trim((string)($_POST['especialidade'] ?? '')),
+            'cref' => trim((string)($_POST['cref'] ?? '')),
+            'status' => in_array((string)($_POST['status'] ?? ''), ['ativo', 'inativo'], true)
+                ? (string)$_POST['status']
+                : 'ativo',
+        ];
+    }
+
     private function validarDados(array $dados): array
     {
         $erros = [];
-        if (empty($dados['nome'])) {
-            $erros[] = 'O campo Nome é obrigatório.';
-        }
-        if (empty($dados['email'])) {
-            $erros[] = 'O campo E-mail é obrigatório.';
-        } elseif (!filter_var($dados['email'], FILTER_VALIDATE_EMAIL)) {
-            $erros[] = 'E-mail inválido.';
-        }
+        if (strlen($dados['nome']) < 3) $erros[] = 'Informe o nome completo do professor.';
+        if (strlen(preg_replace('/\D/', '', $dados['cpf'])) !== 11) $erros[] = 'Informe um CPF com 11 dígitos.';
+        if (!filter_var($dados['email'], FILTER_VALIDATE_EMAIL)) $erros[] = 'Informe um e-mail válido.';
         return $erros;
+    }
+
+    private function formatarCpf(string $cpf): string
+    {
+        $n = preg_replace('/\D/', '', $cpf);
+        if (strlen($n) !== 11) return trim($cpf);
+        return substr($n,0,3).'.'.substr($n,3,3).'.'.substr($n,6,3).'-'.substr($n,9,2);
     }
 }

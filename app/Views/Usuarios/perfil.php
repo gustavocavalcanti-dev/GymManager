@@ -33,7 +33,7 @@ include dirname(__DIR__) . '/layouts/header.php';
         </div>
         <div class="form-group">
             <label class="form-label">Perfil de Acesso</label>
-            <input type="text" class="form-control" value="<?= ucfirst(htmlspecialchars($usuario['perfil'] ?? '')) ?>" disabled>
+            <input type="text" class="form-control" value="<?= htmlspecialchars(['administrador'=>'Administrador','atendente'=>'Recepcionista','professor'=>'Professor'][$usuario['perfil'] ?? ''] ?? ucfirst((string)($usuario['perfil'] ?? ''))) ?>" disabled>
         </div>
 
         <hr style="margin: 24px 0; border: none; border-top: 1px solid var(--border-color);">

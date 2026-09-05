@@ -15,7 +15,7 @@ $featureDefaults = [
         <h1 class="page-title">Planos</h1>
         <p class="subtitle">Configure os planos oferecidos pela academia.</p>
     </div>
-    <?php if ($usuarioLogado && in_array($usuarioLogado['perfil'], ['admin', 'recepcionista'], true)): ?>
+    <?php if ($usuarioLogado && in_array($usuarioLogado['perfil'], ['administrador', 'atendente'], true)): ?>
         <div class="page-actions">
             <a href="<?= $basePath ?>/planos/create" class="btn btn-primary"><?= UI::icon('plus', 18) ?> Novo Plano</a>
         </div>
@@ -60,11 +60,11 @@ $featureDefaults = [
                     <?php endforeach; ?>
                 </ul>
 
-                <?php if ($usuarioLogado && in_array($usuarioLogado['perfil'], ['admin', 'recepcionista'], true)): ?>
+                <?php if ($usuarioLogado && in_array($usuarioLogado['perfil'], ['administrador', 'atendente'], true)): ?>
                     <div class="plan-actions">
                         <a class="btn btn-secondary" href="<?= $basePath ?>/planos/edit?id=<?= (int)$plano['id'] ?>">Editar</a>
                         <form action="<?= $basePath ?>/planos/delete" method="post" onsubmit="return confirm('Excluir este plano?')">
-                            <input type="hidden" name="id" value="<?= (int)$plano['id'] ?>">
+                            <?= Security::campoCSRF() ?><input type="hidden" name="id" value="<?= (int)$plano['id'] ?>">
                             <button class="text-danger" type="submit">Excluir</button>
                         </form>
                     </div>

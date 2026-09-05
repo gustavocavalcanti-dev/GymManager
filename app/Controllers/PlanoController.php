@@ -2,184 +2,141 @@
 
 declare(strict_types=1);
 
+use App\Models\Plano;
 
 class PlanoController extends Controller
 {
-    protected PlanoModel $planoModel;
+    private Plano $model;
 
     public function __construct()
     {
-        $this->planoModel = new PlanoModel();
+        $this->model = new Plano();
     }
 
     public function index(): void
     {
-        $planos = $this->planoModel->listarTodos();
-        $this->view('Planos/index', [
-            'planos' => $planos
-        ]);
+        $this->view('Planos/index', ['planos' => $this->model->listarTodos()]);
     }
 
     public function create(): void
     {
         $this->view('Planos/create', [
             'dados' => [
-                'nome' => '',
-                'descricao' => '',
-                'valor' => '',
-                'duracao_meses' => '1'
+                'nome' => '', 'descricao' => '', 'duracao_meses' => 1,
+                'valor' => '0.00', 'status' => 'ativo',
             ],
-            'erros' => []
+            'erros' => [],
         ]);
     }
 
     public function store(): void
     {
-        $dados = [
-            'nome' => trim($_POST['nome'] ?? ''),
-            'descricao' => trim($_POST['descricao'] ?? ''),
-            'valor' => (float) ($_POST['valor'] ?? 0.00),
-            'duracao_meses' => (int) ($_POST['duracao_meses'] ?? 1)
-        ];
-
+        $this->validarCSRF('/planos');
+        $dados = $this->dadosFormulario();
         $erros = $this->validarDados($dados);
 
-        if (!empty($erros)) {
-            $this->view('Planos/create', [
-                'dados' => $dados,
-                'erros' => $erros
-            ]);
+        if ($erros !== []) {
+            $this->view('Planos/create', compact('dados', 'erros'));
             return;
         }
 
         try {
-            $resultado = $this->planoModel->cadastrar($dados);
-            if ($resultado) {
-                $this->setFlash('sucesso', 'Plano cadastrado com sucesso!');
-                $this->redirect('/planos');
-                return;
-            }
-            $this->view('Planos/create', [
-                'dados' => $dados,
-                'erros' => ['Não foi possível salvar o plano.']
-            ]);
+            $this->model->cadastrar($dados);
+            $this->setFlash('sucesso', 'Plano cadastrado com sucesso!');
+            $this->redirect('/planos');
         } catch (\Throwable $e) {
-            $this->view('Planos/create', [
-                'dados' => $dados,
-                'erros' => ['Erro ao cadastrar: ' . $e->getMessage()]
-            ]);
+            $erros = ['Erro ao cadastrar plano: ' . $e->getMessage()];
+            $this->view('Planos/create', compact('dados', 'erros'));
         }
     }
 
     public function edit(): void
     {
-        $id = (int) ($_GET['id'] ?? 0);
-        if ($id <= 0) {
-            $this->setFlash('erro', 'Código do plano inválido.');
-            $this->redirect('/planos');
-            return;
-        }
+        $id = (int)($_GET['id'] ?? 0);
+        $plano = $id > 0 ? $this->model->buscarPorId($id) : false;
 
-        $plano = $this->planoModel->buscaPorId($id);
         if (!$plano) {
             $this->setFlash('erro', 'Plano não encontrado.');
             $this->redirect('/planos');
-            return;
         }
 
-        $this->view('Planos/edit', [
-            'plano' => $plano,
-            'erros' => []
-        ]);
+        $this->view('Planos/edit', ['plano' => $plano, 'erros' => []]);
     }
 
     public function update(): void
     {
-        $id = (int) ($_POST['id'] ?? $_GET['id'] ?? 0);
-        if ($id <= 0) {
-            $this->setFlash('erro', 'Código do plano inválido.');
-            $this->redirect('/planos');
-            return;
-        }
+        $this->validarCSRF('/planos');
+        $id = (int)($_POST['id'] ?? 0);
 
-        $planoAtual = $this->planoModel->buscaPorId($id);
-        if (!$planoAtual) {
+        if ($id <= 0 || !$this->model->buscarPorId($id)) {
             $this->setFlash('erro', 'Plano não encontrado.');
             $this->redirect('/planos');
-            return;
         }
 
-        $dados = [
-            'nome' => trim($_POST['nome'] ?? ''),
-            'descricao' => trim($_POST['descricao'] ?? ''),
-            'valor' => (float) ($_POST['valor'] ?? 0.00),
-            'duracao_meses' => (int) ($_POST['duracao_meses'] ?? 1)
-        ];
-
+        $dados = $this->dadosFormulario();
         $erros = $this->validarDados($dados);
 
-        if (!empty($erros)) {
+        if ($erros !== []) {
             $this->view('Planos/edit', [
                 'plano' => array_merge(['id' => $id], $dados),
-                'erros' => $erros
+                'erros' => $erros,
             ]);
             return;
         }
 
         try {
-            $resultado = $this->planoModel->editar($id, $dados);
-            if ($resultado) {
-                $this->setFlash('sucesso', 'Plano atualizado com sucesso!');
-                $this->redirect('/planos');
-                return;
-            }
-            $this->view('Planos/edit', [
-                'plano' => array_merge(['id' => $id], $dados),
-                'erros' => ['Não foi possível atualizar.']
-            ]);
+            $this->model->atualizar($id, $dados);
+            $this->setFlash('sucesso', 'Plano atualizado com sucesso!');
+            $this->redirect('/planos');
         } catch (\Throwable $e) {
             $this->view('Planos/edit', [
                 'plano' => array_merge(['id' => $id], $dados),
-                'erros' => ['Erro ao atualizar: ' . $e->getMessage()]
+                'erros' => ['Erro ao atualizar plano: ' . $e->getMessage()],
             ]);
         }
     }
 
     public function delete(): void
     {
-        $id = (int) ($_POST['id'] ?? $_GET['id'] ?? 0);
-        if ($id <= 0) {
-            $this->setFlash('erro', 'Código do plano inválido.');
+        $this->validarCSRF('/planos');
+        $id = (int)($_POST['id'] ?? 0);
+
+        if ($id <= 0 || !$this->model->buscarPorId($id)) {
+            $this->setFlash('erro', 'Plano não encontrado.');
             $this->redirect('/planos');
-            return;
         }
 
         try {
-            $resultado = $this->planoModel->excluir($id);
-            if ($resultado) {
-                $this->setFlash('sucesso', 'Plano excluído com sucesso!');
-            } else {
-                $this->setFlash('erro', 'Não foi possível excluir.');
-            }
+            $this->model->excluir($id);
+            $this->setFlash('sucesso', 'Plano excluído com sucesso!');
         } catch (\Throwable $e) {
-            $this->setFlash('erro', 'Erro ao excluir: ' . $e->getMessage());
+            $this->setFlash('erro', 'Não foi possível excluir o plano. Verifique se existem matrículas vinculadas.');
         }
 
         $this->redirect('/planos');
     }
 
+    private function dadosFormulario(): array
+    {
+        $valor = str_replace(',', '.', trim((string)($_POST['valor'] ?? '0')));
+
+        return [
+            'nome' => trim((string)($_POST['nome'] ?? '')),
+            'descricao' => trim((string)($_POST['descricao'] ?? '')),
+            'duracao_meses' => (int)($_POST['duracao_meses'] ?? 0),
+            'valor' => (float)$valor,
+            'status' => in_array((string)($_POST['status'] ?? ''), ['ativo', 'inativo'], true)
+                ? (string)$_POST['status']
+                : 'ativo',
+        ];
+    }
+
     private function validarDados(array $dados): array
     {
         $erros = [];
-        if (empty($dados['nome'])) {
-            $erros[] = 'O campo Nome é obrigatório.';
-        }
-        if ($dados['valor'] <= 0) {
-            $erros[] = 'O valor do plano deve ser maior que zero.';
-        }
-        if ($dados['duracao_meses'] <= 0) {
-            $erros[] = 'A duração deve ser de pelo menos 1 mês.';
-        }
+        if (strlen($dados['nome']) < 2) $erros[] = 'Informe o nome do plano.';
+        if ($dados['duracao_meses'] <= 0) $erros[] = 'A duração deve ser maior que zero.';
+        if ($dados['valor'] < 0) $erros[] = 'O valor não pode ser negativo.';
         return $erros;
     }
 }

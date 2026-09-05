@@ -8,7 +8,7 @@ require_once dirname(__DIR__, 2) . '/Helpers/UI.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - GymManager</title>
-    <link rel="stylesheet" href="<?= $basePath ?>/css/style.css?v=20260904-prototipo-v3">
+    <link rel="stylesheet" href="<?= $basePath ?>/css/style.css?v=20260905-final">
 </head>
 <body class="login-body">
 <div class="login-container">
@@ -75,6 +75,6 @@ require_once dirname(__DIR__, 2) . '/Helpers/UI.php';
         </div>
     </section>
 </div>
-<script src="<?= $basePath ?>/js/app.js?v=20260904-prototipo-v3"></script>
+<script src="<?= $basePath ?>/js/app.js?v=20260905-final"></script>
 </body>
 </html>

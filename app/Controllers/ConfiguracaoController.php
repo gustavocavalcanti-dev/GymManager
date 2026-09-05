@@ -57,10 +57,9 @@ class ConfiguracaoController extends Controller
                 $extensoes = [
                     'image/png' => 'png',
                     'image/jpeg' => 'jpg',
-                    'application/pdf' => 'pdf',
                 ];
                 if (!isset($extensoes[$mime])) {
-                    throw new RuntimeException('Formato de logo inválido. Envie PNG, JPG ou PDF.');
+                    throw new RuntimeException('Formato de logo inválido. Envie PNG ou JPG.');
                 }
 
                 $uploadDir = dirname(__DIR__, 2) . '/assets/uploads';

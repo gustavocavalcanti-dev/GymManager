@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-
+use App\Models\Usuario;
 
 class LoginController extends Controller
 {
@@ -10,54 +10,39 @@ class LoginController extends Controller
     {
         if ($this->usuarioLogado() !== null) {
             $this->redirect('/');
-            return;
         }
+
         $this->view('Login/index');
     }
 
     public function autenticar(): void
     {
-        $csrfToken = $_POST['csrf_token'] ?? '';
-        if (!Security::validarTokenCSRF($csrfToken)) {
-            $this->setFlash('erro', 'Token de segurança inválido. Tente novamente.');
-            $this->redirect('/login');
-            return;
-        }
+        $this->validarCSRF('/login');
 
-        $email = trim($_POST['email'] ?? '');
-        $senha = $_POST['senha'] ?? '';
+        $email = trim((string)($_POST['email'] ?? ''));
+        $senha = (string)($_POST['senha'] ?? '');
 
-        if (empty($email) || empty($senha)) {
+        if ($email === '' || $senha === '') {
             $this->setFlash('erro', 'Preencha o e-mail e a senha.');
             $this->redirect('/login');
-            return;
         }
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $this->setFlash('erro', 'Informe um e-mail válido.');
             $this->redirect('/login');
-            return;
         }
 
-        $usuarioModel = new UsuarioModel();
-        $usuario = $usuarioModel->buscarPorEmail($email);
+        $model = new Usuario();
+        $usuario = $model->buscarPorEmail($email);
 
-        if ($usuario === null) {
+        if ($usuario === null || !Security::verificarSenha($senha, (string)$usuario['senha'])) {
             $this->setFlash('erro', 'E-mail ou senha incorretos.');
             $this->redirect('/login');
-            return;
         }
 
-        if (!Security::verificarSenha($senha, $usuario['senha'])) {
-            $this->setFlash('erro', 'E-mail ou senha incorretos.');
+        if (($usuario['status'] ?? 'inativo') !== 'ativo') {
+            $this->setFlash('erro', 'Sua conta está inativa. Entre em contato com o administrador.');
             $this->redirect('/login');
-            return;
-        }
-
-        if (empty($usuario['ativo'])) {
-            $this->setFlash('erro', 'Sua conta está desativada. Entre em contato com o administrador.');
-            $this->redirect('/login');
-            return;
         }
 
         if (session_status() === PHP_SESSION_NONE) {
@@ -67,14 +52,12 @@ class LoginController extends Controller
         session_regenerate_id(true);
 
         $_SESSION['usuario'] = [
-            'id' => (int) $usuario['id'],
-            'nome' => $usuario['nome'],
-            'email' => $usuario['email'],
-            'perfil' => $usuario['perfil'],
-            'ativo' => (bool) $usuario['ativo']
+            'id' => (int)$usuario['id'],
+            'nome' => (string)$usuario['nome'],
+            'email' => (string)$usuario['email'],
+            'perfil' => (string)$usuario['perfil'],
+            'status' => (string)$usuario['status'],
         ];
-
-        $usuarioModel->atualizarUltimoLogin((int) $usuario['id']);
 
         $this->setFlash('sucesso', 'Bem-vindo(a), ' . $usuario['nome'] . '!');
         $this->redirect('/');
@@ -96,14 +79,14 @@ class LoginController extends Controller
                 time() - 42000,
                 $params['path'],
                 $params['domain'],
-                $params['secure'],
-                $params['httponly']
+                (bool)$params['secure'],
+                (bool)$params['httponly']
             );
         }
 
         session_destroy();
-
         session_start();
+
         $this->setFlash('sucesso', 'Você saiu do sistema com sucesso.');
         $this->redirect('/login');
     }

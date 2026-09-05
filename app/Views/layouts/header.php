@@ -15,7 +15,7 @@ if (!preg_match('/^#[0-9a-fA-F]{6}$/', $primaryColor)) $primaryColor = '#2164E9'
 $defaultDark = (($appConfig['tema'] ?? 'claro') === 'escuro');
 $logoPath = (string)($appConfig['logo_path'] ?? '');
 $logoVisual = $logoPath !== '' && !str_ends_with(strtolower($logoPath), '.pdf');
-$roleLabels = ['admin' => 'Administrador', 'professor' => 'Professor', 'recepcionista' => 'Recepcionista'];
+$roleLabels = ['administrador' => 'Administrador', 'professor' => 'Professor', 'atendente' => 'Recepcionista'];
 
 $navItems = [
     ['/', 'dashboard', 'Dashboard'],
@@ -25,9 +25,9 @@ $navItems = [
     ['/matriculas', 'clipboard', 'Matrículas'],
     ['/treinos', 'dumbbell', 'Treinos'],
     ['/pagamentos', 'card', 'Pagamentos'],
-    ['/relatorios', 'chart', 'Relatórios'],
 ];
-if ($usuarioLogado && ($usuarioLogado['perfil'] ?? '') === 'admin') {
+if ($usuarioLogado && ($usuarioLogado['perfil'] ?? '') === 'administrador') {
+    $navItems[] = ['/relatorios', 'chart', 'Relatórios'];
     $navItems[] = ['/usuarios', 'user-settings', 'Usuários'];
     $navItems[] = ['/configuracoes', 'settings', 'Configurações'];
 }
@@ -43,7 +43,7 @@ function gmNavActive(string $currentUri, string $route): bool {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GymManager</title>
-    <link rel="stylesheet" href="<?= $basePath ?>/css/style.css?v=20260904-prototipo-v3">
+    <link rel="stylesheet" href="<?= $basePath ?>/css/style.css?v=20260905-final">
     <style>:root{--primary:<?= htmlspecialchars($primaryColor) ?>}</style>
 </head>
 <body<?= $defaultDark ? ' class="dark"' : '' ?>>

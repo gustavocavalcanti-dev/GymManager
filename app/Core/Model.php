@@ -4,61 +4,85 @@ declare(strict_types=1);
 
 namespace App\Core;
 
-require_once __DIR__ . '/Database.php';
-
 abstract class Model
 {
-    protected $db;
-    protected $table;
+    protected \PDO $db;
+    protected string $table = '';
 
     public function __construct()
     {
-        $this->db = \Database::conectar();
+        $this->db = Database::conectar();
     }
 
-    public function listarTodos(): array{
-        $sql = "SELECT * FROM {$this->table} ";
-        $stmp = $this->db->query($sql);
-        return $stmp->fetchAll();
+    public function listarTodos(): array
+    {
+        $stmt = $this->db->query("SELECT * FROM {$this->table} ORDER BY id DESC");
+        return $stmt->fetchAll();
     }
 
-    public function buscaPorId($id) {
-        $sql = "SELECT * FROM {$this->table} WHERE id = ?";
-        $stmt = $this->db->prepare($sql);
+    public function buscarPorId(int $id): array|false
+    {
+        $stmt = $this->db->prepare("SELECT * FROM {$this->table} WHERE id = ?");
         $stmt->execute([$id]);
         return $stmt->fetch();
     }
 
-    public function cadastrar(array $dados){
-        $colunas = array_keys($dados);
-        $campos = implode(', ', $colunas);
-        $placeholders = implode(', ', array_fill(0, count($colunas), '?'));
-        $sql = "INSERT INTO {$this->table} ($campos) VALUES ($placeholders)";
-        $stmt = $this->db->prepare($sql);
-        return $stmt->execute(array_values($dados));
-    }
-    public function editar($id, array $dados)
+    public function cadastrar(array $dados): bool
     {
-        $campos = [];
-        $colunas = array_keys($dados);
-
-        foreach ($colunas as $coluna) {
-            $campos[] = "$coluna = ?";
+        if ($dados === []) {
+            return false;
         }
 
-        $set = implode(', ', $campos);
-        $sql = "UPDATE {$this->table} SET $set WHERE id = ?";
-        $stmt = $this->db->prepare($sql);
+        $colunas = array_keys($dados);
+        $campos = implode(', ', array_map(static fn(string $c): string => "`{$c}`", $colunas));
+        $placeholders = implode(', ', array_fill(0, count($colunas), '?'));
+
+        $stmt = $this->db->prepare(
+            "INSERT INTO {$this->table} ({$campos}) VALUES ({$placeholders})"
+        );
+
+        return $stmt->execute(array_values($dados));
+    }
+
+    public function atualizar(int $id, array $dados): bool
+    {
+        if ($id <= 0 || $dados === []) {
+            return false;
+        }
+
+        $campos = array_map(
+            static fn(string $c): string => "`{$c}` = ?",
+            array_keys($dados)
+        );
+
         $valores = array_values($dados);
         $valores[] = $id;
+
+        $stmt = $this->db->prepare(
+            "UPDATE {$this->table} SET " . implode(', ', $campos) . " WHERE id = ?"
+        );
 
         return $stmt->execute($valores);
     }
 
-    public function excluir($id)
+    public function excluir(int $id): bool
     {
-        $sql = "DELETE FROM {$this->table} WHERE id = ?";
-        $stmt = $this->db->prepare($sql);
+        $stmt = $this->db->prepare("DELETE FROM {$this->table} WHERE id = ?");
         return $stmt->execute([$id]);
+    }
+
+    /*
+     * Compatibilidade com versões anteriores do projeto.
+     * Os Controllers finais usam buscarPorId() e atualizar(), que são os nomes
+     * definidos no documento técnico da Parte 3.
+     */
+    public function buscaPorId(int $id): array|false
+    {
+        return $this->buscarPorId($id);
+    }
+
+    public function editar(int $id, array $dados): bool
+    {
+        return $this->atualizar($id, $dados);
     }
 }

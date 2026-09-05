@@ -12,8 +12,8 @@ class AdminMiddleware
 
         $usuario = $_SESSION['usuario'] ?? null;
 
-        if ($usuario === null || $usuario['perfil'] !== 'admin') {
-            $_SESSION['flash']['erro'] = 'Acesso negado. Você não tem permissão para acessar esta área.';
+        if ($usuario === null || ($usuario['perfil'] ?? '') !== 'administrador') {
+            $_SESSION['flash']['erro'] = 'Acesso negado. Área exclusiva do administrador.';
             $basePath = defined('BASE_PATH') ? BASE_PATH : '';
             header('Location: ' . $basePath . '/');
             exit;
